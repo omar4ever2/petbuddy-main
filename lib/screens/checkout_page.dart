@@ -1,0 +1,597 @@
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import '../providers/cart_provider.dart';
+import '../providers/theme_provider.dart';
+
+class CheckoutPage extends StatefulWidget {
+  const CheckoutPage({Key? key}) : super(key: key);
+
+  @override
+  State<CheckoutPage> createState() => _CheckoutPageState();
+}
+
+class _CheckoutPageState extends State<CheckoutPage> {
+  final _formKey = GlobalKey<FormState>();
+  bool _isLoading = false;
+
+  // Form fields
+  final _nameController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _addressController = TextEditingController();
+  final _cityController = TextEditingController();
+  String _paymentMethod = 'Credit Card';
+
+  final List<String> _paymentMethods = [
+    'Credit Card',
+    'Cash on Delivery',
+    'Apple Pay',
+    'Google Pay',
+  ];
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _phoneController.dispose();
+    _addressController.dispose();
+    _cityController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cartProvider = Provider.of<CartProvider>(context);
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDarkMode = themeProvider.isDarkMode;
+
+    // Calculate cart totals
+    final subtotal = cartProvider.totalAmount;
+    const shipping = 15.0;
+    final total = subtotal + shipping;
+
+    return Scaffold(
+      backgroundColor: isDarkMode ? Colors.grey[900] : Colors.grey[50],
+      appBar: AppBar(
+        title: const Text('Checkout'),
+        backgroundColor: isDarkMode ? Colors.grey[850] : Colors.white,
+      ),
+      body: cartProvider.itemCount == 0
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.shopping_cart_outlined,
+                    size: 80,
+                    color: isDarkMode ? Colors.grey[700] : Colors.grey[300],
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Your cart is empty',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: isDarkMode ? Colors.white : Colors.black,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Add items to checkout',
+                    style: TextStyle(
+                      color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color.fromARGB(255, 40, 108, 100),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 24, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text('Back to Cart'),
+                  ),
+                ],
+              ),
+            )
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Order summary
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: isDarkMode ? Colors.grey[850] : Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Order Summary',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Subtotal (${cartProvider.itemCount} items)',
+                                style: TextStyle(
+                                  color: isDarkMode
+                                      ? Colors.grey[400]
+                                      : Colors.grey[600],
+                                ),
+                              ),
+                              Text(
+                                'LE ${subtotal.toStringAsFixed(2)}',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                  color:
+                                      isDarkMode ? Colors.white : Colors.black,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Shipping',
+                                style: TextStyle(
+                                  color: isDarkMode
+                                      ? Colors.grey[400]
+                                      : Colors.grey[600],
+                                ),
+                              ),
+                              Text(
+                                'LE ${shipping.toStringAsFixed(2)}',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                  color:
+                                      isDarkMode ? Colors.white : Colors.black,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const Divider(height: 24),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'Total',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                'LE ${total.toStringAsFixed(2)}',
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color.fromARGB(255, 40, 108, 100),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // Shipping information
+                    Text(
+                      'Shipping Information',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: isDarkMode ? Colors.white : Colors.black,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _nameController,
+                      decoration: InputDecoration(
+                        labelText: 'Full Name',
+                        border: const OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.person_outline),
+                        filled: isDarkMode,
+                        fillColor: isDarkMode ? Colors.grey[800] : null,
+                        labelStyle: TextStyle(
+                          color: isDarkMode ? Colors.grey[300] : null,
+                        ),
+                      ),
+                      style: TextStyle(
+                        color: isDarkMode ? Colors.white : Colors.black,
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter your name';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _phoneController,
+                      decoration: InputDecoration(
+                        labelText: 'Phone',
+                        border: const OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.phone_outlined),
+                        filled: isDarkMode,
+                        fillColor: isDarkMode ? Colors.grey[800] : null,
+                        labelStyle: TextStyle(
+                          color: isDarkMode ? Colors.grey[300] : null,
+                        ),
+                      ),
+                      style: TextStyle(
+                        color: isDarkMode ? Colors.white : Colors.black,
+                      ),
+                      keyboardType: TextInputType.phone,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter your phone number';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _addressController,
+                      decoration: InputDecoration(
+                        labelText: 'Address',
+                        border: const OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.home_outlined),
+                        filled: isDarkMode,
+                        fillColor: isDarkMode ? Colors.grey[800] : null,
+                        labelStyle: TextStyle(
+                          color: isDarkMode ? Colors.grey[300] : null,
+                        ),
+                      ),
+                      style: TextStyle(
+                        color: isDarkMode ? Colors.white : Colors.black,
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter your address';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _cityController,
+                      decoration: InputDecoration(
+                        labelText: 'City',
+                        border: const OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.location_city_outlined),
+                        filled: isDarkMode,
+                        fillColor: isDarkMode ? Colors.grey[800] : null,
+                        labelStyle: TextStyle(
+                          color: isDarkMode ? Colors.grey[300] : null,
+                        ),
+                      ),
+                      style: TextStyle(
+                        color: isDarkMode ? Colors.white : Colors.black,
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter your city';
+                        }
+                        return null;
+                      },
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // Payment method
+                    Text(
+                      'Payment Method',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: isDarkMode ? Colors.white : Colors.black,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    DropdownButtonFormField<String>(
+                      value: _paymentMethod,
+                      decoration: InputDecoration(
+                        border: const OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.payment),
+                        filled: isDarkMode,
+                        fillColor: isDarkMode ? Colors.grey[800] : null,
+                      ),
+                      dropdownColor:
+                          isDarkMode ? Colors.grey[800] : Colors.white,
+                      style: TextStyle(
+                        color: isDarkMode ? Colors.white : Colors.black,
+                      ),
+                      items: _paymentMethods.map((method) {
+                        IconData icon;
+                        switch (method) {
+                          case 'Credit Card':
+                            icon = Icons.credit_card;
+                            break;
+                          case 'Cash on Delivery':
+                            icon = Icons.money;
+                            break;
+                          case 'Apple Pay':
+                            icon = Icons.apple;
+                            break;
+                          case 'Google Pay':
+                            icon = Icons.g_mobiledata;
+                            break;
+                          default:
+                            icon = Icons.payment;
+                        }
+
+                        return DropdownMenuItem<String>(
+                          value: method,
+                          child: Row(
+                            children: [
+                              Icon(icon,
+                                  size: 20,
+                                  color: isDarkMode ? Colors.grey[300] : null),
+                              const SizedBox(width: 8),
+                              Text(method),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          _paymentMethod = value!;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    if (_paymentMethod == 'Credit Card')
+                      Column(
+                        children: [
+                          TextFormField(
+                            decoration: InputDecoration(
+                              labelText: 'Card Number',
+                              border: const OutlineInputBorder(),
+                              prefixIcon: const Icon(Icons.credit_card),
+                              hintText: '•••• •••• •••• ••••',
+                              filled: isDarkMode,
+                              fillColor: isDarkMode ? Colors.grey[800] : null,
+                              labelStyle: TextStyle(
+                                color: isDarkMode ? Colors.grey[300] : null,
+                              ),
+                              hintStyle: TextStyle(
+                                color: isDarkMode ? Colors.grey[500] : null,
+                              ),
+                            ),
+                            style: TextStyle(
+                              color: isDarkMode ? Colors.white : Colors.black,
+                            ),
+                            keyboardType: TextInputType.number,
+                            validator: (value) {
+                              if (_paymentMethod == 'Credit Card') {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please enter your card number';
+                                }
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextFormField(
+                                  decoration: InputDecoration(
+                                    labelText: 'Expiry Date',
+                                    border: const OutlineInputBorder(),
+                                    hintText: 'MM/YY',
+                                    filled: isDarkMode,
+                                    fillColor:
+                                        isDarkMode ? Colors.grey[800] : null,
+                                    labelStyle: TextStyle(
+                                      color:
+                                          isDarkMode ? Colors.grey[300] : null,
+                                    ),
+                                    hintStyle: TextStyle(
+                                      color:
+                                          isDarkMode ? Colors.grey[500] : null,
+                                    ),
+                                  ),
+                                  style: TextStyle(
+                                    color: isDarkMode
+                                        ? Colors.white
+                                        : Colors.black,
+                                  ),
+                                  validator: (value) {
+                                    if (_paymentMethod == 'Credit Card') {
+                                      if (value == null || value.isEmpty) {
+                                        return 'Required';
+                                      }
+                                    }
+                                    return null;
+                                  },
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: TextFormField(
+                                  decoration: InputDecoration(
+                                    labelText: 'CVV',
+                                    border: const OutlineInputBorder(),
+                                    hintText: '•••',
+                                    filled: isDarkMode,
+                                    fillColor:
+                                        isDarkMode ? Colors.grey[800] : null,
+                                    labelStyle: TextStyle(
+                                      color:
+                                          isDarkMode ? Colors.grey[300] : null,
+                                    ),
+                                    hintStyle: TextStyle(
+                                      color:
+                                          isDarkMode ? Colors.grey[500] : null,
+                                    ),
+                                  ),
+                                  style: TextStyle(
+                                    color: isDarkMode
+                                        ? Colors.white
+                                        : Colors.black,
+                                  ),
+                                  keyboardType: TextInputType.number,
+                                  validator: (value) {
+                                    if (_paymentMethod == 'Credit Card') {
+                                      if (value == null || value.isEmpty) {
+                                        return 'Required';
+                                      }
+                                    }
+                                    return null;
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+
+                    const SizedBox(height: 32),
+
+                    // Checkout button
+                    ElevatedButton(
+                      onPressed: _isLoading ? null : _submitOrder,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor:
+                            const Color.fromARGB(255, 40, 108, 100),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        minimumSize: const Size(double.infinity, 50),
+                      ),
+                      child: _isLoading
+                          ? const SizedBox(
+                              height: 24,
+                              width: 24,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Text(
+                              'PLACE ORDER',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                    ),
+
+                    const SizedBox(height: 16),
+                  ],
+                ),
+              ),
+            ),
+    );
+  }
+
+  Future<void> _submitOrder() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // Simulate order processing
+      await Future.delayed(const Duration(seconds: 2));
+
+      // Get cart provider
+      final cartProvider = Provider.of<CartProvider>(context, listen: false);
+
+      // Clear the cart after successful order
+      cartProvider.clear();
+
+      if (mounted) {
+        // Show success dialog
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Order Placed!'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.check_circle,
+                  color: Color.fromARGB(255, 40, 108, 100),
+                  size: 64,
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Your order has been placed successfully.',
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Order #${DateTime.now().millisecondsSinceEpoch.toString().substring(5, 13)}',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Color.fromARGB(255, 40, 108, 100),
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                  // Navigate back to home
+                  Navigator.of(context).popUntil((route) => route.isFirst);
+                },
+                child: const Text('Continue Shopping'),
+              ),
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      // Show error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error placing order: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+}
