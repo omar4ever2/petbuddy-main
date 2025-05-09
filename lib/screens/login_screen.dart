@@ -34,13 +34,14 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      final supabaseService = Provider.of<SupabaseService>(context, listen: false);
-      
+      final supabaseService =
+          Provider.of<SupabaseService>(context, listen: false);
+
       await supabaseService.signIn(
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
-      
+
       if (mounted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => const HomePage()),
@@ -211,4 +212,4 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
-} 
+}

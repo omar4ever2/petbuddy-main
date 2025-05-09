@@ -37,14 +37,15 @@ class _SignupScreenState extends State<SignupScreen> {
     });
 
     try {
-      final supabaseService = Provider.of<SupabaseService>(context, listen: false);
-      
+      final supabaseService =
+          Provider.of<SupabaseService>(context, listen: false);
+
       await supabaseService.signUp(
         email: _emailController.text.trim(),
         password: _passwordController.text,
         username: _usernameController.text.trim(),
       );
-      
+
       if (mounted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => const ProfileSetupPage()),
@@ -88,10 +89,9 @@ class _SignupScreenState extends State<SignupScreen> {
                   const Text(
                     'Join PetBuddy',
                     style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Color.fromARGB(255, 40, 108, 100)
-                    ),
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Color.fromARGB(255, 40, 108, 100)),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
@@ -242,4 +242,4 @@ class _SignupScreenState extends State<SignupScreen> {
       ),
     );
   }
-} 
+}
