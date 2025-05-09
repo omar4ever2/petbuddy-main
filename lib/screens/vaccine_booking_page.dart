@@ -6,6 +6,7 @@ import '../models/vaccine_appointment.dart';
 import '../providers/theme_provider.dart';
 import '../utils/theme_utils.dart';
 import '../widgets/vaccine_appointment_card.dart';
+import '../screens/my_appointments_page.dart';
 
 class VaccineBookingPage extends StatefulWidget {
   const VaccineBookingPage({Key? key}) : super(key: key);
@@ -223,15 +224,41 @@ class _VaccineBookingPageState extends State<VaccineBookingPage>
       });
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Appointment booked successfully!'),
-            backgroundColor: Colors.green,
+        // Show a success dialog with option to view appointments
+        showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Appointment Booked!'),
+            content: const Text(
+              'Your pet vaccination appointment has been successfully scheduled.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                  // Switch to Appointments tab after successful booking
+                  _tabController.animateTo(0);
+                },
+                child: const Text('OK'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const MyAppointmentsPage(),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: ThemeUtils.themeColor,
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('View All Appointments'),
+              ),
+            ],
           ),
         );
-
-        // Switch to Appointments tab after successful booking
-        _tabController.animateTo(0);
       }
     } catch (e) {
       print('Error booking appointment: $e');
@@ -335,7 +362,22 @@ class _VaccineBookingPageState extends State<VaccineBookingPage>
     return Scaffold(
       backgroundColor: ThemeUtils.backgroundColor(isDarkMode),
       appBar: AppBar(
-        title: const Text('Vaccine Appointments'),
+        title: const Text('Pet Vaccination',
+            style: TextStyle(fontWeight: FontWeight.bold)),
+        actions: [
+          // Add a button to view all appointments
+          IconButton(
+            icon: const Icon(Icons.calendar_month),
+            tooltip: 'My Appointments',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const MyAppointmentsPage(),
+                ),
+              );
+            },
+          ),
+        ],
         backgroundColor: themeColor,
         elevation: 0,
         foregroundColor: Colors.white,

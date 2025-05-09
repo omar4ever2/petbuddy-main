@@ -1260,4 +1260,28 @@ class SupabaseService with ChangeNotifier {
       throw Exception('Failed to load adoptable pet details: $e');
     }
   }
+
+  // Get all vaccine appointments for the current user
+  Future<List<Map<String, dynamic>>> getAllVaccineAppointments() async {
+    try {
+      if (!isAuthenticated) {
+        throw Exception('User not authenticated');
+      }
+
+      print('Getting all vaccine appointments for user: ${_user!.id}');
+
+      final userId = _client.auth.currentUser!.id;
+
+      final response = await _client
+          .from('vaccine_appointments')
+          .select()
+          .eq('user_id', userId)
+          .order('appointment_date', ascending: false);
+
+      return List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      print('Error getting all vaccine appointments: $e');
+      return [];
+    }
+  }
 }

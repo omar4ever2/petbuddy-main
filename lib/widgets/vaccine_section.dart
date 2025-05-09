@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../services/supabase_service.dart';
 import '../screens/vaccine_booking_page.dart';
+import '../screens/my_appointments_page.dart';
 
 class VaccineSection extends StatelessWidget {
   const VaccineSection({Key? key}) : super(key: key);
@@ -144,15 +145,41 @@ class VaccineSection extends StatelessWidget {
                   bottomRight: Radius.circular(16),
                 ),
               ),
-              child: Center(
-                child: Text(
-                  'Book an Appointment',
-                  style: TextStyle(
-                    color: themeColor,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Book an Appointment',
+                    style: TextStyle(
+                      color: themeColor,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
                   ),
+                  const SizedBox(width: 8),
+                  Icon(
+                    Icons.arrow_forward,
+                    size: 16,
+                    color: themeColor,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const MyAppointmentsPage(),
                 ),
+              );
+            },
+            child: Text(
+              'View My Appointments',
+              style: TextStyle(
+                color: themeColor,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ),
