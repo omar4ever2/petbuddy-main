@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'screens/splash_screen.dart';
 import 'providers/cart_provider.dart';
@@ -44,9 +43,18 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (ctx) => CartProvider()),
-        ChangeNotifierProvider(create: (ctx) => FavoritesProvider()),
-        ChangeNotifierProvider(create: (ctx) => SupabaseService(supabase)),
         ChangeNotifierProvider(create: (ctx) => ThemeProvider()),
+        // Ensure SupabaseService is created before FavoritesProvider
+        ChangeNotifierProvider(create: (ctx) => SupabaseService(supabase)),
+        ChangeNotifierProxyProvider<SupabaseService, FavoritesProvider>(
+          create: (_) => FavoritesProvider(),
+          update: (_, supabaseService, previousFavoritesProvider) {
+            final provider = previousFavoritesProvider ?? FavoritesProvider();
+            // Initialize favorites provider with supabase service
+            provider.initialize(supabaseService);
+            return provider;
+          },
+        ),
       ],
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, _) {

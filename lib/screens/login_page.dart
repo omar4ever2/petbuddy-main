@@ -36,14 +36,15 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     try {
-      final supabaseService = Provider.of<SupabaseService>(context, listen: false);
-      
+      final supabaseService =
+          Provider.of<SupabaseService>(context, listen: false);
+
       if (_isSignUp) {
         await supabaseService.signUp(
           email: _emailController.text,
           password: _passwordController.text,
         );
-        
+
         if (mounted) {
           // Navigate to profile setup page after signup
           Navigator.pushReplacement(
@@ -56,11 +57,11 @@ class _LoginPageState extends State<LoginPage> {
           email: _emailController.text,
           password: _passwordController.text,
         );
-        
+
         if (mounted) {
           // Check if user has a profile
           final hasProfile = await supabaseService.checkUserHasProfile();
-          
+
           if (hasProfile) {
             Navigator.pop(context);
           } else {
@@ -128,7 +129,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
               const SizedBox(height: 32),
-              
+
               // Error message
               if (_errorMessage != null)
                 Container(
@@ -144,7 +145,7 @@ class _LoginPageState extends State<LoginPage> {
                     style: TextStyle(color: Colors.red[800]),
                   ),
                 ),
-              
+
               // Email field
               TextFormField(
                 controller: _emailController,
@@ -165,7 +166,7 @@ class _LoginPageState extends State<LoginPage> {
                 },
               ),
               const SizedBox(height: 16),
-              
+
               // Password field
               TextFormField(
                 controller: _passwordController,
@@ -185,7 +186,7 @@ class _LoginPageState extends State<LoginPage> {
                   return null;
                 },
               ),
-              
+
               if (!_isSignUp)
                 Align(
                   alignment: Alignment.centerRight,
@@ -196,9 +197,9 @@ class _LoginPageState extends State<LoginPage> {
                     child: const Text('Forgot Password?'),
                   ),
                 ),
-              
+
               const SizedBox(height: 24),
-              
+
               // Submit button
               ElevatedButton(
                 onPressed: _isLoading ? null : _submitForm,
@@ -208,7 +209,8 @@ class _LoginPageState extends State<LoginPage> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  disabledBackgroundColor: const Color.fromARGB(255, 40, 108, 100),
+                  disabledBackgroundColor:
+                      const Color.fromARGB(255, 40, 108, 100),
                 ),
                 child: _isLoading
                     ? const SizedBox(
@@ -224,9 +226,9 @@ class _LoginPageState extends State<LoginPage> {
                         style: const TextStyle(fontSize: 16),
                       ),
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               // Toggle between sign in and sign up
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -248,10 +250,21 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ],
               ),
+
+              const SizedBox(height: 24),
+
+              const Text(
+                'Built with love by Omar Mohamed - Ziad Hossam - Moustafa Samer - Amina Tarek',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey,
+                ),
+                textAlign: TextAlign.center,
+              ),
             ],
           ),
         ),
       ),
     );
   }
-} 
+}

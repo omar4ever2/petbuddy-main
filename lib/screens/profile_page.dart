@@ -35,8 +35,9 @@ class _ProfilePageState extends State<ProfilePage> {
     });
 
     try {
-      final supabaseService = Provider.of<SupabaseService>(context, listen: false);
-      
+      final supabaseService =
+          Provider.of<SupabaseService>(context, listen: false);
+
       if (supabaseService.isAuthenticated) {
         final profileData = await supabaseService.getUserProfile();
         setState(() {
@@ -177,7 +178,7 @@ class _ProfilePageState extends State<ProfilePage> {
     final city = _profileData?['city'];
     final state = _profileData?['state'];
     final zip = _profileData?['zip'];
-    
+
     return RefreshIndicator(
       onRefresh: _loadProfileData,
       color: themeColor,
@@ -198,8 +199,8 @@ class _ProfilePageState extends State<ProfilePage> {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: isDarkMode 
-                        ? Colors.black.withOpacity(0.3) 
+                    color: isDarkMode
+                        ? Colors.black.withOpacity(0.3)
                         : Colors.grey.withOpacity(0.3),
                     spreadRadius: 1,
                     blurRadius: 10,
@@ -234,9 +235,10 @@ class _ProfilePageState extends State<ProfilePage> {
                             child: CircleAvatar(
                               radius: 40,
                               backgroundColor: Colors.white.withOpacity(0.9),
-                              backgroundImage: avatarUrl != null && avatarUrl.isNotEmpty
-                                  ? NetworkImage(avatarUrl)
-                                  : null,
+                              backgroundImage:
+                                  avatarUrl != null && avatarUrl.isNotEmpty
+                                      ? NetworkImage(avatarUrl)
+                                      : null,
                               child: avatarUrl == null || avatarUrl.isEmpty
                                   ? Text(
                                       fullName != null && fullName.isNotEmpty
@@ -255,7 +257,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
                         ),
                         const SizedBox(width: 20),
-                        
+
                         // User info with better styling
                         Expanded(
                           child: Column(
@@ -317,7 +319,8 @@ class _ProfilePageState extends State<ProfilePage> {
                         onPressed: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => const EditProfilePage()),
+                            MaterialPageRoute(
+                                builder: (context) => const EditProfilePage()),
                           ).then((_) => _loadProfileData());
                         },
                         icon: const Icon(Icons.edit, size: 18),
@@ -337,29 +340,29 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
               ),
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // Address section if available
             if (address != null && address.isNotEmpty)
               _buildAddressCard(address, city, state, zip, isDarkMode),
-            
+
             const SizedBox(height: 24),
-            
+
             // User activity cards
             _buildSectionTitle('My Activity'),
-            
+
             _buildActivityGrid(isDarkMode),
-            
+
             const SizedBox(height: 24),
-            
+
             // Support & Help
             _buildSectionTitle('Support & Help'),
-            
+
             _buildSupportOptions(isDarkMode),
-            
+
             const SizedBox(height: 32),
-            
+
             // Sign out button
             SizedBox(
               width: double.infinity,
@@ -377,15 +380,28 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
               ),
             ),
-            
+
             const SizedBox(height: 40),
+
+            // Credits
+            Text(
+              'Built with love by Omar Mohamed - Ziad Hossam - Moustafa Samer - Amina Tarek',
+              style: TextStyle(
+                fontSize: 12,
+                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+              ),
+              textAlign: TextAlign.center,
+            ),
+
+            const SizedBox(height: 16),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildAddressCard(String address, String? city, String? state, String? zip, bool isDarkMode) {
+  Widget _buildAddressCard(String address, String? city, String? state,
+      String? zip, bool isDarkMode) {
     String formattedAddress = address;
     if (city != null && city.isNotEmpty) {
       formattedAddress += ', $city';
@@ -403,8 +419,8 @@ class _ProfilePageState extends State<ProfilePage> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: isDarkMode 
-                ? Colors.black.withOpacity(0.2) 
+            color: isDarkMode
+                ? Colors.black.withOpacity(0.2)
                 : Colors.grey.withOpacity(0.1),
             spreadRadius: 1,
             blurRadius: 4,
@@ -444,7 +460,8 @@ class _ProfilePageState extends State<ProfilePage> {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const EditProfilePage()),
+                      MaterialPageRoute(
+                          builder: (context) => const EditProfilePage()),
                     ).then((_) => _loadProfileData());
                   },
                   child: Text(
@@ -538,7 +555,8 @@ class _ProfilePageState extends State<ProfilePage> {
           () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => const VaccineBookingPage()),
+              MaterialPageRoute(
+                  builder: (context) => const VaccineBookingPage()),
             );
           },
         ),
@@ -701,13 +719,14 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Future<void> _signOut() async {
     try {
-      final supabaseService = Provider.of<SupabaseService>(context, listen: false);
+      final supabaseService =
+          Provider.of<SupabaseService>(context, listen: false);
       await supabaseService.signOut();
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Signed out successfully')),
       );
-      
+
       // Navigate back to home page
       Navigator.pop(context);
     } catch (e) {
@@ -733,4 +752,4 @@ class ProfileMenuItem {
     this.trailing,
     required this.onTap,
   });
-} 
+}

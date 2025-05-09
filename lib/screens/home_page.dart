@@ -87,7 +87,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDarkMode = themeProvider.isDarkMode;
-    
+
     return Scaffold(
       backgroundColor: ThemeUtils.backgroundColor(isDarkMode),
       body: SafeArea(
@@ -130,7 +130,8 @@ class _HomePageState extends State<HomePage> {
                                   _errorMessage!,
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
-                                    color: ThemeUtils.secondaryTextColor(isDarkMode),
+                                    color: ThemeUtils.secondaryTextColor(
+                                        isDarkMode),
                                   ),
                                 ),
                               ),
@@ -190,8 +191,8 @@ class _HomePageState extends State<HomePage> {
         color: ThemeUtils.cardColor(isDarkMode),
         boxShadow: [
           BoxShadow(
-            color: isDarkMode 
-                ? Colors.black.withOpacity(0.1) 
+            color: isDarkMode
+                ? Colors.black.withOpacity(0.1)
                 : Colors.grey.withOpacity(0.05),
             spreadRadius: 1,
             blurRadius: 5,
@@ -219,18 +220,18 @@ class _HomePageState extends State<HomePage> {
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   child: Row(
                     children: [
-                      Icon(
-                        Icons.search, 
-                        color: isDarkMode ? Colors.grey[400] : Colors.grey[600], 
-                        size: 20
-                      ),
+                      Icon(Icons.search,
+                          color:
+                              isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                          size: 20),
                       const SizedBox(width: 10),
                       Text(
                         'Search for pets and supplies...',
                         style: TextStyle(
-                          color: isDarkMode ? Colors.grey[400] : Colors.grey[600], 
-                          fontSize: 14
-                        ),
+                            color: isDarkMode
+                                ? Colors.grey[400]
+                                : Colors.grey[600],
+                            fontSize: 14),
                       ),
                     ],
                   ),
@@ -356,8 +357,8 @@ class _HomePageState extends State<HomePage> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: isDarkMode 
-                ? themeColor.withOpacity(0.4) 
+            color: isDarkMode
+                ? themeColor.withOpacity(0.4)
                 : themeColor.withOpacity(0.3),
             blurRadius: 10,
             offset: const Offset(0, 4),
@@ -371,20 +372,20 @@ class _HomePageState extends State<HomePage> {
             children: [
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Hello, $username!',
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Find everything your pet needs',
-            style: TextStyle(
-              fontSize: 16,
+                children: [
+                  Text(
+                    'Hello, $username!',
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Find everything your pet needs',
+                    style: TextStyle(
+                      fontSize: 16,
                       color: Colors.white,
                     ),
                   ),
@@ -413,8 +414,8 @@ class _HomePageState extends State<HomePage> {
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: isDarkMode 
-                      ? Colors.black.withOpacity(0.2) 
+                  color: isDarkMode
+                      ? Colors.black.withOpacity(0.2)
                       : Colors.black.withOpacity(0.05),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
@@ -454,7 +455,7 @@ class _HomePageState extends State<HomePage> {
   Widget _buildCategories() {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDarkMode = themeProvider.isDarkMode;
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -501,8 +502,8 @@ class _HomePageState extends State<HomePage> {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: isDarkMode 
-                    ? Colors.black.withOpacity(0.2) 
+                color: isDarkMode
+                    ? Colors.black.withOpacity(0.2)
                     : Colors.grey.withOpacity(0.05),
                 spreadRadius: 1,
                 blurRadius: 4,
@@ -514,7 +515,8 @@ class _HomePageState extends State<HomePage> {
               ? Center(
                   child: Text(
                     'No categories found',
-                    style: TextStyle(color: ThemeUtils.secondaryTextColor(isDarkMode)),
+                    style: TextStyle(
+                        color: ThemeUtils.secondaryTextColor(isDarkMode)),
                   ),
                 )
               : ListView.builder(
@@ -526,7 +528,18 @@ class _HomePageState extends State<HomePage> {
                     final category = _categories[index];
                     return CategoryItem(
                       id: category['id'],
-                      icon: _getCategoryIcon(category['icon_name']),
+                      icon: index == 0
+                          ? FontAwesomeIcons.dog
+                          : index == 1
+                              ? FontAwesomeIcons.crow
+                              : index == 2
+                                  ? FontAwesomeIcons.fish
+                                  : index == 3
+                                      ? FontAwesomeIcons.otter
+                                      : index == 4
+                                          ? FontAwesomeIcons.cat
+                                          : _getCategoryIcon(
+                                              category['icon_name']),
                       title: category['name'],
                       color: themeColor,
                       onTap: () {
@@ -549,26 +562,41 @@ class _HomePageState extends State<HomePage> {
   }
 
   IconData _getCategoryIcon(String? iconName) {
-    switch (iconName) {
-      case 'pets':
-        return FontAwesomeIcons.dog;
-      case 'content_cut':
-        return FontAwesomeIcons.cat;
-      case 'front_hand':
-        return FontAwesomeIcons.crow;
-      case 'water':
-        return FontAwesomeIcons.fish;
-      case 'home':
-        return FontAwesomeIcons.otter;
-      default:
-        return FontAwesomeIcons.s;
+    // First check the icon_name field
+    if (iconName != null) {
+      switch (iconName.toLowerCase()) {
+        case 'dogs':
+        case 'dog':
+          return FontAwesomeIcons.dog;
+        case 'cats':
+        case 'cat':
+          return FontAwesomeIcons.cat;
+        case 'birds':
+        case 'bird':
+          return FontAwesomeIcons.crow;
+        case 'fish':
+        case 'fishes':
+        case 'aquatic':
+          return FontAwesomeIcons.fish;
+        case 'small pets':
+        case 'small animals':
+        case 'otter':
+        case 'otters':
+          return FontAwesomeIcons.otter;
+        case 'reptiles':
+        case 'reptile':
+          return FontAwesomeIcons.dragon;
+      }
     }
+
+    // Default icon if no match was found
+    return FontAwesomeIcons.paw;
   }
 
   Widget _buildFeaturedProducts() {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDarkMode = themeProvider.isDarkMode;
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -666,7 +694,7 @@ class _HomePageState extends State<HomePage> {
   Widget _buildAdoptablePetsSection() {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDarkMode = themeProvider.isDarkMode;
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -724,8 +752,8 @@ class _HomePageState extends State<HomePage> {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: isDarkMode 
-                          ? Colors.black.withOpacity(0.2) 
+                      color: isDarkMode
+                          ? Colors.black.withOpacity(0.2)
                           : Colors.grey.withOpacity(0.05),
                       spreadRadius: 1,
                       blurRadius: 4,
@@ -745,7 +773,8 @@ class _HomePageState extends State<HomePage> {
                       const SizedBox(height: 12),
                       Text(
                         'Error: ${snapshot.error}',
-                        style: TextStyle(color: ThemeUtils.secondaryTextColor(isDarkMode)),
+                        style: TextStyle(
+                            color: ThemeUtils.secondaryTextColor(isDarkMode)),
                         textAlign: TextAlign.center,
                       ),
                     ],
@@ -761,8 +790,8 @@ class _HomePageState extends State<HomePage> {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: isDarkMode 
-                          ? Colors.black.withOpacity(0.2) 
+                      color: isDarkMode
+                          ? Colors.black.withOpacity(0.2)
                           : Colors.grey.withOpacity(0.05),
                       spreadRadius: 1,
                       blurRadius: 4,
@@ -782,7 +811,8 @@ class _HomePageState extends State<HomePage> {
                       const SizedBox(height: 12),
                       Text(
                         'No pets available for adoption',
-                        style: TextStyle(color: ThemeUtils.secondaryTextColor(isDarkMode)),
+                        style: TextStyle(
+                            color: ThemeUtils.secondaryTextColor(isDarkMode)),
                       ),
                     ],
                   ),
@@ -826,15 +856,15 @@ class _HomePageState extends State<HomePage> {
   Widget _buildBottomNavigationBar() {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDarkMode = themeProvider.isDarkMode;
-    
+
     return Builder(
       builder: (context) => Container(
         decoration: BoxDecoration(
           color: ThemeUtils.cardColor(isDarkMode),
           boxShadow: [
             BoxShadow(
-              color: isDarkMode 
-                  ? Colors.black.withOpacity(0.3) 
+              color: isDarkMode
+                  ? Colors.black.withOpacity(0.3)
                   : Colors.grey.withOpacity(0.1),
               spreadRadius: 1,
               blurRadius: 8,

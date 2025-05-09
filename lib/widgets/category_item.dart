@@ -24,7 +24,7 @@ class CategoryItem extends StatelessWidget {
     final themeColor = color ?? const Color.fromARGB(255, 37, 150, 190);
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDarkMode = themeProvider.isDarkMode;
-    
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -36,7 +36,7 @@ class CategoryItem extends StatelessWidget {
               height: 70,
               width: 70,
               decoration: BoxDecoration(
-                color: isDarkMode 
+                color: isDarkMode
                     ? themeColor.withOpacity(0.15)
                     : themeColor.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(16),

@@ -254,7 +254,7 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '$totalItems ${totalItems == 1 ? 'item' : 'items'} • \$${order['total_amount'].toStringAsFixed(2)}',
+                  '$totalItems ${totalItems == 1 ? 'item' : 'items'} • EGP ${order['total_amount'].toStringAsFixed(2)}',
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                   ),
@@ -427,7 +427,7 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
                           ),
                         ),
                         Text(
-                          '\$${order['total_amount'].toStringAsFixed(2)}',
+                          'EGP ${order['total_amount'].toStringAsFixed(2)}',
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -534,7 +534,7 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
-                  '${item['quantity']} x \$${item['price'].toStringAsFixed(2)}',
+                  '${item['quantity']} x EGP ${item['price'].toStringAsFixed(2)}',
                   style: TextStyle(
                     color: Colors.grey[600],
                     fontSize: 14,
@@ -544,7 +544,7 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
             ),
           ),
           Text(
-            '\$${(item['price'] * item['quantity']).toStringAsFixed(2)}',
+            'EGP ${(item['price'] * item['quantity']).toStringAsFixed(2)}',
             style: const TextStyle(
               fontWeight: FontWeight.bold,
             ),

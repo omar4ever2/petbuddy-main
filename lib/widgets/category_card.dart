@@ -41,7 +41,8 @@ class CategoryCard extends StatelessWidget {
             Stack(
               children: [
                 ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(16)),
                   child: Image.network(
                     imageUrl,
                     height: 120,
@@ -75,7 +76,8 @@ class CategoryCard extends StatelessWidget {
                           Colors.transparent,
                         ],
                       ),
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                      borderRadius:
+                          const BorderRadius.vertical(top: Radius.circular(16)),
                     ),
                   ),
                 ),
@@ -125,4 +127,4 @@ class CategoryCard extends StatelessWidget {
       ),
     );
   }
-} 
+}

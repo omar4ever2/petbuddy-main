@@ -132,7 +132,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Text(
+                const Text(
                   'Set Up Your Profile',
                   style: TextStyle(
                     fontSize: 24,

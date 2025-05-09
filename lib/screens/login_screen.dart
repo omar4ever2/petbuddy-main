@@ -18,6 +18,9 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
   String? _errorMessage;
 
+  // Password visibility state
+  bool _passwordVisible = false;
+
   @override
   void dispose() {
     _emailController.dispose();
@@ -134,10 +137,26 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _passwordController,
-                    obscureText: true,
+                    obscureText: !_passwordVisible,
                     decoration: InputDecoration(
                       labelText: 'Password',
                       prefixIcon: const Icon(Icons.lock),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _passwordVisible
+                              ? Icons.visibility
+                              : Icons.visibility_off,
+                          color: Colors.grey,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _passwordVisible = !_passwordVisible;
+                          });
+                        },
+                        tooltip: _passwordVisible
+                            ? 'Hide password'
+                            : 'Show password',
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -203,6 +222,15 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: const Text('Sign Up'),
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Built with love by Omar Mohamed - Ziad Hossam - Moustafa Samer - Amina Tarek',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
                 ],
               ),

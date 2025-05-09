@@ -170,7 +170,7 @@ class OrderConfirmationPage extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  '\$${orderData['total_amount'].toStringAsFixed(2)}',
+                  'EGP ${orderData['total_amount'].toStringAsFixed(2)}',
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -215,7 +215,7 @@ class OrderConfirmationPage extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
-                  '${item['quantity']} x \$${item['price'].toStringAsFixed(2)}',
+                  '${item['quantity']} x EGP ${item['price'].toStringAsFixed(2)}',
                   style: TextStyle(
                     color: Colors.grey[600],
                     fontSize: 14,
@@ -225,7 +225,7 @@ class OrderConfirmationPage extends StatelessWidget {
             ),
           ),
           Text(
-            '\$${(item['price'] * item['quantity']).toStringAsFixed(2)}',
+            'EGP ${(item['price'] * item['quantity']).toStringAsFixed(2)}',
             style: const TextStyle(
               fontWeight: FontWeight.bold,
             ),

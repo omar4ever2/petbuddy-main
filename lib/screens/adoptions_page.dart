@@ -55,6 +55,9 @@ class _AdoptionsPageState extends State<AdoptionsPage> {
       print('Error loading adoptable pets: $e');
       setState(() {
         _isLoading = false;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load pets: $e')),
+        );
       });
     }
   }

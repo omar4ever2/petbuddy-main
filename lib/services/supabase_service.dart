@@ -48,18 +48,18 @@ class SupabaseService with ChangeNotifier {
     try {
       // Ensure we have a direct reference to Supabase
       final supabase = Supabase.instance.client;
-      
+
       // Attempt signup with proper error handling
       final response = await supabase.auth.signUp(
         email: email,
         password: password,
         data: username != null ? {'username': username} : null,
       );
-      
+
       if (response.user == null) {
         throw Exception('Signup failed: User is null. Check your credentials.');
       }
-      
+
       _user = response.user;
       notifyListeners();
     } catch (e) {
@@ -78,7 +78,7 @@ class SupabaseService with ChangeNotifier {
         email: email,
         password: password,
       );
-      
+
       _user = response.user;
       notifyListeners();
     } catch (e) {
@@ -113,7 +113,7 @@ class SupabaseService with ChangeNotifier {
           .from('products')
           .select("*")
           .order('created_at', ascending: false);
-      
+
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {
       rethrow;
@@ -123,17 +123,13 @@ class SupabaseService with ChangeNotifier {
   // Fetch categories from database
   Future<List<Map<String, dynamic>>> getCategories() async {
     try {
-      
       // Use a simpler query first to debug
-      final response = await _client
-          .from('categories')
-          .select('*');
-      
-      
+      final response = await _client.from('categories').select('*');
+
       if (response == null) {
         return [];
       }
-      
+
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {
       return [];
@@ -144,20 +140,18 @@ class SupabaseService with ChangeNotifier {
   Future<List<Map<String, dynamic>>> getFeaturedProducts() async {
     try {
       print('Fetching featured products from Supabase...');
-      
+
       // Use a simpler query first to debug
-      final response = await _client
-          .from('products')
-          .select('*')
-          .eq('is_featured', true);
-      
+      final response =
+          await _client.from('products').select('*').eq('is_featured', true);
+
       print('Featured products response raw: $response');
-      
+
       if (response == null) {
         print('Featured products response is null');
         return [];
       }
-      
+
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {
       print('Error fetching featured products: $e');
@@ -166,14 +160,15 @@ class SupabaseService with ChangeNotifier {
   }
 
   // Fetch products by category
-  Future<List<Map<String, dynamic>>> getProductsByCategory(String categoryId) async {
+  Future<List<Map<String, dynamic>>> getProductsByCategory(
+      String categoryId) async {
     try {
       final response = await _client
           .from('products')
           .select('*, categories(name)')
           .eq('category_id', categoryId)
           .order('created_at', ascending: false);
-      
+
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {
       return [];
@@ -183,7 +178,7 @@ class SupabaseService with ChangeNotifier {
   // Add product to favorites
   Future<void> addToFavorites(String productId) async {
     if (_user == null) return;
-    
+
     try {
       await _client.from('favorites').insert({
         'user_id': _user!.id,
@@ -198,7 +193,7 @@ class SupabaseService with ChangeNotifier {
   // Remove product from favorites
   Future<void> removeFromFavorites(String productId) async {
     if (_user == null) return;
-    
+
     try {
       await _client
           .from('favorites')
@@ -213,51 +208,72 @@ class SupabaseService with ChangeNotifier {
 
   // Get user favorites
   Future<List<String>> getFavoriteIds() async {
-    if (_user == null) return [];
-    
+    if (_user == null) {
+      print('getFavoriteIds: User is null, returning empty list');
+      return [];
+    }
+
     try {
+      print('getFavoriteIds: Fetching favorites for user ${_user!.id}');
+
       final response = await _client
           .from('favorites')
           .select('product_id')
           .eq('user_id', _user!.id);
-      
-      return List<String>.from(
+
+      print('getFavoriteIds: Raw response: $response');
+
+      final ids = List<String>.from(
         response.map((item) => item['product_id'] as String),
       );
+
+      print('getFavoriteIds: Parsed ${ids.length} favorite IDs: $ids');
+      return ids;
     } catch (e) {
+      print('Error in getFavoriteIds: $e');
       return [];
     }
   }
 
   // Get favorite products with details
   Future<List<Map<String, dynamic>>> getFavoriteProducts() async {
-    await Future.delayed(const Duration(milliseconds: 800));
-    
-    // Mock data for favorite products
-    return [
-      {
-        'id': '1',
-        'name': 'Premium Dog Food',
-        'price': 29.99,
-        'image': 'https://images.unsplash.com/photo-1589924691995-400dc9ecc119?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2671&q=80',
-        'rating': 4.5,
-      },
-      {
-        'id': '2',
-        'name': 'Cat Scratching Post',
-        'price': 49.99,
-        'discount_price': 39.99,
-        'image': 'https://images.unsplash.com/photo-1545249390-6bdfa286032f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2671&q=80',
-        'rating': 4.0,
-      },
-      {
-        'id': '3',
-        'name': 'Bird Cage Deluxe',
-        'price': 89.99,
-        'image': 'https://images.unsplash.com/photo-1605001011156-cbf0b0f67a51?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2671&q=80',
-        'rating': 4.8,
-      },
-    ];
+    if (_user == null) {
+      print('getFavoriteProducts: User is null, returning empty list');
+      return [];
+    }
+
+    try {
+      // Get favorite product IDs
+      final favoriteIds = await getFavoriteIds();
+
+      if (favoriteIds.isEmpty) {
+        print('getFavoriteProducts: No favorite IDs found');
+        return [];
+      }
+
+      print('getFavoriteProducts: Fetching products for IDs: $favoriteIds');
+
+      // Fetch full product details for each favorite ID
+      final response =
+          await _client.from('products').select('*').in_('id', favoriteIds);
+
+      print('getFavoriteProducts: Raw response length: ${response.length}');
+      print('getFavoriteProducts: Raw response: $response');
+
+      final products = List<Map<String, dynamic>>.from(response.map((product) {
+        // Ensure the image field is correctly mapped
+        return {
+          ...product,
+          'image': product['image_url'] ?? product['image'],
+        };
+      }));
+
+      print('getFavoriteProducts: Returning ${products.length} products');
+      return products;
+    } catch (e) {
+      print('Error in getFavoriteProducts: $e');
+      return [];
+    }
   }
 
   // Rate a product
@@ -265,18 +281,18 @@ class SupabaseService with ChangeNotifier {
     if (!isAuthenticated) {
       throw Exception('User not authenticated');
     }
-    
+
     // Simulate API call delay
     await Future.delayed(const Duration(milliseconds: 800));
-    
+
     try {
       // In a real implementation, this would update the rating in the database
       // For now, we'll store it in a local variable for demo purposes
       print('Product $productId rated: $rating by user ${_user!.id}');
-      
+
       // Store the user's rating in our local map
       _userRatings[productId] = rating;
-      
+
       // Return success
       return;
     } catch (e) {
@@ -284,16 +300,16 @@ class SupabaseService with ChangeNotifier {
       throw Exception('Failed to submit rating: $e');
     }
   }
-  
+
   // Get user's rating for a product
   Future<double?> getUserProductRating(String productId) async {
     if (!isAuthenticated) {
       throw Exception('User not authenticated');
     }
-    
+
     // Simulate API call delay
     await Future.delayed(const Duration(milliseconds: 300));
-    
+
     // Return the user's rating for this product if it exists
     return _userRatings[productId];
   }
@@ -306,7 +322,7 @@ class SupabaseService with ChangeNotifier {
           .select()
           .ilike('name', '%$query%')
           .order('created_at', ascending: false);
-      
+
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {
       rethrow;
@@ -318,11 +334,11 @@ class SupabaseService with ChangeNotifier {
     try {
       final file = io.File(filePath);
       final bytes = await file.readAsBytes();
-      
+
       final response = await _client.storage
           .from('product_images')
           .uploadBinary(fileName, bytes);
-      
+
       return _client.storage.from('product_images').getPublicUrl(fileName);
     } catch (e) {
       rethrow;
@@ -340,9 +356,9 @@ class SupabaseService with ChangeNotifier {
           'icon_name': 'pets',
         }
       ]).select();
-      
+
       print('Inserted test category: $categoryResponse');
-      
+
       if (categoryResponse != null && categoryResponse.isNotEmpty) {
         // Insert test product
         final productResponse = await _client.from('products').insert([
@@ -355,7 +371,7 @@ class SupabaseService with ChangeNotifier {
             'is_featured': true,
           }
         ]).select();
-        
+
         print('Inserted test product: $productResponse');
       }
     } catch (e) {
@@ -367,20 +383,20 @@ class SupabaseService with ChangeNotifier {
   Future<List<Map<String, dynamic>>> getFeaturedAdoptablePets() async {
     try {
       print('Fetching featured adoptable pets from Supabase...');
-      
+
       final response = await _client
           .from('adoptable_pets')
           .select('*')
           .eq('is_featured', true)
           .order('created_at', ascending: false);
-      
+
       print('Featured adoptable pets response: $response');
-      
+
       if (response == null) {
         print('Featured adoptable pets response is null');
         return [];
       }
-      
+
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {
       print('Error fetching featured adoptable pets: $e');
@@ -395,7 +411,7 @@ class SupabaseService with ChangeNotifier {
           .from('adoptable_pets')
           .select('*')
           .order('created_at', ascending: false);
-      
+
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {
       print('Error fetching all adoptable pets: $e');
@@ -404,14 +420,15 @@ class SupabaseService with ChangeNotifier {
   }
 
   // Fetch adoptable pets by species
-  Future<List<Map<String, dynamic>>> getAdoptablePetsBySpecies(String species) async {
+  Future<List<Map<String, dynamic>>> getAdoptablePetsBySpecies(
+      String species) async {
     try {
       final response = await _client
           .from('adoptable_pets')
           .select('*')
           .eq('species', species)
           .order('created_at', ascending: false);
-      
+
       // Add mock data for birds if using mock data
       if (species == 'Bird') {
         return [
@@ -420,15 +437,19 @@ class SupabaseService with ChangeNotifier {
             'name': 'Tweety',
             'species': 'Bird',
             'breed': 'Canary',
-            'birth_date': DateTime.now().subtract(const Duration(days: 365)).toIso8601String(),
+            'birth_date': DateTime.now()
+                .subtract(const Duration(days: 365))
+                .toIso8601String(),
             'gender': 'Male',
             'color': 'Yellow',
-            'image_url': 'https://images.unsplash.com/photo-1594156723276-21afc7b7d6f7',
+            'image_url':
+                'https://images.unsplash.com/photo-1594156723276-21afc7b7d6f7',
             'location': 'Brooklyn, NY',
             'is_vaccinated': true,
             'is_neutered': false,
             'is_house_trained': true,
-            'description': 'Tweety is a cheerful canary with a beautiful singing voice. He loves to socialize and would make a wonderful companion.',
+            'description':
+                'Tweety is a cheerful canary with a beautiful singing voice. He loves to socialize and would make a wonderful companion.',
             'medical_history': 'Regular check-ups, all vaccinations up to date.'
           },
           {
@@ -436,15 +457,19 @@ class SupabaseService with ChangeNotifier {
             'name': 'Blue',
             'species': 'Bird',
             'breed': 'Budgerigar',
-            'birth_date': DateTime.now().subtract(const Duration(days: 730)).toIso8601String(),
+            'birth_date': DateTime.now()
+                .subtract(const Duration(days: 730))
+                .toIso8601String(),
             'gender': 'Female',
             'color': 'Blue',
-            'image_url': 'https://images.unsplash.com/photo-1591198936750-16d8e15edc9f',
+            'image_url':
+                'https://images.unsplash.com/photo-1591198936750-16d8e15edc9f',
             'location': 'Queens, NY',
             'is_vaccinated': true,
             'is_neutered': false,
             'is_house_trained': true,
-            'description': 'Blue is a friendly budgie who enjoys interacting with humans. She\'s playful and can learn to mimic simple words.',
+            'description':
+                'Blue is a friendly budgie who enjoys interacting with humans. She\'s playful and can learn to mimic simple words.',
             'medical_history': 'Healthy with no medical issues.'
           },
           {
@@ -452,20 +477,25 @@ class SupabaseService with ChangeNotifier {
             'name': 'Rico',
             'species': 'Bird',
             'breed': 'African Grey Parrot',
-            'birth_date': DateTime.now().subtract(const Duration(days: 1825)).toIso8601String(),
+            'birth_date': DateTime.now()
+                .subtract(const Duration(days: 1825))
+                .toIso8601String(),
             'gender': 'Male',
             'color': 'Grey',
-            'image_url': 'https://images.unsplash.com/photo-1544923408-75c5cef46f14',
+            'image_url':
+                'https://images.unsplash.com/photo-1544923408-75c5cef46f14',
             'location': 'Manhattan, NY',
             'is_vaccinated': true,
             'is_neutered': false,
             'is_house_trained': true,
-            'description': 'Rico is an intelligent African Grey who can mimic sounds and has a vocabulary of over 50 words. He needs an experienced bird owner.',
-            'medical_history': 'Regular check-ups, balanced diet, all vaccines current.'
+            'description':
+                'Rico is an intelligent African Grey who can mimic sounds and has a vocabulary of over 50 words. He needs an experienced bird owner.',
+            'medical_history':
+                'Regular check-ups, balanced diet, all vaccines current.'
           }
         ];
       }
-      
+
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {
       print('Error fetching adoptable pets by species: $e');
@@ -478,17 +508,17 @@ class SupabaseService with ChangeNotifier {
     if (!isAuthenticated) {
       throw Exception('User not authenticated');
     }
-    
+
     try {
       // Use real Supabase query instead of mock data
       print('Getting orders for user ID: ${_user!.id}');
-      
+
       final response = await _client
           .from('orders')
           .select('*, order_items(*)')
           .eq('user_id', _user!.id)
           .order('created_at', ascending: false);
-      
+
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {
       print('Error getting user orders: $e');
@@ -501,17 +531,17 @@ class SupabaseService with ChangeNotifier {
     if (!isAuthenticated) {
       throw Exception('User not authenticated');
     }
-    
+
     try {
       // Use real Supabase query instead of mock data
       print('Getting user profile data for user ID: ${_user!.id}');
-      
+
       final response = await _client
           .from('user_profiles')
           .select('*')
           .eq('id', _user!.id)
           .maybeSingle();
-      
+
       if (response == null) {
         // If profile doesn't exist yet, return basic info - no email
         return {
@@ -519,7 +549,7 @@ class SupabaseService with ChangeNotifier {
           'created_at': DateTime.now().toIso8601String(),
         };
       }
-      
+
       return response;
     } catch (e) {
       print('Error getting user profile: $e');
@@ -528,32 +558,30 @@ class SupabaseService with ChangeNotifier {
   }
 
   // Update user profile
-  Future<Map<String, dynamic>> updateUserProfile(Map<String, dynamic> data) async {
+  Future<Map<String, dynamic>> updateUserProfile(
+      Map<String, dynamic> data) async {
     if (!isAuthenticated) {
       throw Exception('User not authenticated');
     }
-      
+
     try {
       // Add updated_at timestamp
       data['updated_at'] = DateTime.now().toIso8601String();
-      
+
       // Check if profile already exists
       final existingProfile = await _client
           .from('user_profiles')
           .select()
           .eq('id', _user!.id)
           .maybeSingle();
-      
+
       if (existingProfile == null) {
         // Create new profile with user ID
         data['id'] = _user!.id;
-        
-        final response = await _client
-            .from('user_profiles')
-            .insert(data)
-            .select()
-            .single();
-        
+
+        final response =
+            await _client.from('user_profiles').insert(data).select().single();
+
         return response;
       } else {
         // Update existing profile
@@ -563,7 +591,7 @@ class SupabaseService with ChangeNotifier {
             .eq('id', _user!.id)
             .select()
             .single();
-        
+
         return response;
       }
     } catch (e) {
@@ -581,26 +609,22 @@ class SupabaseService with ChangeNotifier {
 
       final fileBytes = await imageFile.readAsBytes();
       final fileExt = imageFile.path.split('.').last;
-      final fileName = '${_user!.id}_${DateTime.now().millisecondsSinceEpoch}.$fileExt';
-      
+      final fileName =
+          '${_user!.id}_${DateTime.now().millisecondsSinceEpoch}.$fileExt';
+
       // Upload the file to Supabase Storage
-      final response = await _client
-          .storage
+      final response = await _client.storage
           .from('avatars')
           .uploadBinary(fileName, fileBytes);
-      
+
       // Get public URL for the uploaded image
-      final imageUrl = _client
-          .storage
-          .from('avatars')
-          .getPublicUrl(fileName);
-      
+      final imageUrl = _client.storage.from('avatars').getPublicUrl(fileName);
+
       // Update user profile with the new avatar URL
       await _client
           .from('user_profiles')
-          .update({'avatar_url': imageUrl})
-          .eq('id', _user!.id);
-      
+          .update({'avatar_url': imageUrl}).eq('id', _user!.id);
+
       return imageUrl;
     } catch (e) {
       print('Error uploading profile image: $e');
@@ -611,7 +635,7 @@ class SupabaseService with ChangeNotifier {
   /// Refreshes the user data from Supabase
   Future<void> refreshUserData() async {
     if (!isAuthenticated) return;
-    
+
     try {
       final userId = _client.auth.currentUser!.id;
       final response = await _client
@@ -619,7 +643,7 @@ class SupabaseService with ChangeNotifier {
           .select()
           .eq('id', userId)
           .maybeSingle();
-      
+
       if (response != null) {
         // Update cached user data
         _userData = response;
@@ -636,19 +660,19 @@ class SupabaseService with ChangeNotifier {
       if (!isAuthenticated) {
         throw Exception('User not authenticated');
       }
-      
+
       final userId = _client.auth.currentUser!.id;
-      
+
       // Check if profile already exists
       final existingProfile = await _client
           .from('user_profiles')
           .select()
           .eq('id', userId)
           .maybeSingle();
-      
+
       // Add timestamps
       profileData['updated_at'] = DateTime.now().toIso8601String();
-      
+
       if (existingProfile != null) {
         // Update existing profile
         await _client
@@ -659,10 +683,8 @@ class SupabaseService with ChangeNotifier {
         // Create new profile with user ID and created_at
         profileData['id'] = userId;
         profileData['created_at'] = DateTime.now().toIso8601String();
-        
-        await _client
-            .from('user_profiles')
-            .insert(profileData);
+
+        await _client.from('user_profiles').insert(profileData);
       }
     } catch (e) {
       print('Error creating user profile: $e');
@@ -673,48 +695,170 @@ class SupabaseService with ChangeNotifier {
   Future<bool> checkUserHasProfile() async {
     try {
       if (!isAuthenticated) return false;
-      
+
       final userId = _client.auth.currentUser!.id;
-      
+
       final profile = await _client
           .from('user_profiles')
           .select()
           .eq('id', userId)
           .maybeSingle();
-      
+
       return profile != null;
     } catch (e) {
       print('Error checking user profile: $e');
       return false;
     }
   }
-  
+
   // Get order tracking information
   Future<Map<String, dynamic>> getOrderTracking(String orderId) async {
     try {
       if (!isAuthenticated) {
         throw Exception('User not authenticated');
       }
-      
+
       // Using real Supabase query
       print('Getting tracking data for order ID: $orderId');
-      
+
       final userId = _client.auth.currentUser!.id;
-      
+
       final response = await _client
           .from('order_tracking')
           .select('*, tracking_updates(*)')
           .eq('order_id', orderId)
           .eq('user_id', userId)
           .single();
-      
+
       return response;
     } catch (e) {
       print('Error getting order tracking: $e');
       throw Exception('Failed to get order tracking: $e');
     }
   }
-  
+
+  // Update order status which will trigger tracking updates
+  Future<void> updateOrderStatus(String orderId, String newStatus) async {
+    try {
+      if (!isAuthenticated) {
+        throw Exception('User not authenticated');
+      }
+
+      final userId = _client.auth.currentUser!.id;
+
+      // First verify user owns this order
+      final order = await _client
+          .from('orders')
+          .select('id')
+          .eq('id', orderId)
+          .eq('user_id', userId)
+          .single();
+
+      if (order == null) {
+        throw Exception('Order not found or access denied');
+      }
+
+      // Update order status
+      await _client
+          .from('orders')
+          .update({'status': newStatus}).eq('id', orderId);
+
+      print('Order status updated to $newStatus for order $orderId');
+    } catch (e) {
+      print('Error updating order status: $e');
+      throw Exception('Failed to update order status: $e');
+    }
+  }
+
+  // Add a custom tracking update
+  Future<void> addTrackingUpdate(
+      String orderId, String status, String description,
+      {Map<String, double>? location}) async {
+    try {
+      if (!isAuthenticated) {
+        throw Exception('User not authenticated');
+      }
+
+      final userId = _client.auth.currentUser!.id;
+
+      // Get the tracking ID
+      final tracking = await _client
+          .from('order_tracking')
+          .select('id')
+          .eq('order_id', orderId)
+          .eq('user_id', userId)
+          .single();
+
+      if (tracking == null) {
+        throw Exception('Tracking record not found');
+      }
+
+      // Create the tracking update
+      await _client.from('tracking_updates').insert({
+        'tracking_id': tracking['id'],
+        'status': status,
+        'description': description,
+        'location': location,
+        'timestamp': DateTime.now().toIso8601String(),
+      });
+
+      // Update the tracking last_updated field
+      await _client
+          .from('order_tracking')
+          .update({'last_updated': DateTime.now().toIso8601String()}).eq(
+              'id', tracking['id']);
+
+      print('Added tracking update for order $orderId: $status');
+    } catch (e) {
+      print('Error adding tracking update: $e');
+      throw Exception('Failed to add tracking update: $e');
+    }
+  }
+
+  // Update current location of an order
+  Future<void> updateOrderLocation(
+      String orderId, double latitude, double longitude) async {
+    try {
+      if (!isAuthenticated) {
+        throw Exception('User not authenticated');
+      }
+
+      final userId = _client.auth.currentUser!.id;
+
+      // Get the tracking ID
+      final tracking = await _client
+          .from('order_tracking')
+          .select('id')
+          .eq('order_id', orderId)
+          .eq('user_id', userId)
+          .single();
+
+      if (tracking == null) {
+        throw Exception('Tracking record not found');
+      }
+
+      // Update current location
+      await _client.from('order_tracking').update({
+        'current_location': {'latitude': latitude, 'longitude': longitude},
+        'last_updated': DateTime.now().toIso8601String(),
+      }).eq('id', tracking['id']);
+
+      // Add a tracking update with location information
+      await _client.from('tracking_updates').insert({
+        'tracking_id': tracking['id'],
+        'status': 'Location Updated',
+        'description': 'The package location has been updated.',
+        'location': {'latitude': latitude, 'longitude': longitude},
+        'timestamp': DateTime.now().toIso8601String(),
+      });
+
+      print('Updated order location for $orderId');
+    } catch (e) {
+      print('Error updating order location: $e');
+      throw Exception('Failed to update order location: $e');
+    }
+  }
+
   // Helper method to get a random status for demo purposes
   String _getRandomStatus(String orderId) {
     // Use the orderId to determine a consistent status
@@ -724,11 +868,11 @@ class SupabaseService with ChangeNotifier {
       'out_for_delivery',
       'delivered',
     ];
-    
+
     // Use the last character of the orderId to pick a status
     final lastChar = orderId.characters.last;
     final index = lastChar.codeUnitAt(0) % statusOptions.length;
-    
+
     return statusOptions[index];
   }
 
@@ -738,71 +882,72 @@ class SupabaseService with ChangeNotifier {
       if (!isAuthenticated) {
         throw Exception('User not authenticated');
       }
-      
+
       // Using real Supabase query
       print('Getting upcoming vaccine appointments for user: ${_user!.id}');
-      
+
       final userId = _client.auth.currentUser!.id;
       final now = DateTime.now().toIso8601String();
-      
+
       final response = await _client
           .from('vaccine_appointments')
           .select()
           .eq('user_id', userId)
           .gte('appointment_date', now)
           .order('appointment_date', ascending: true);
-      
+
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {
       print('Error getting upcoming vaccine appointments: $e');
       return [];
     }
   }
-  
+
   // Create a new vaccine appointment
-  Future<Map<String, dynamic>> createVaccineAppointment(Map<String, dynamic> appointmentData) async {
+  Future<Map<String, dynamic>> createVaccineAppointment(
+      Map<String, dynamic> appointmentData) async {
     try {
       if (!isAuthenticated) {
         throw Exception('User not authenticated');
       }
-      
+
       // Using real Supabase query
       print('Creating vaccine appointment with data: $appointmentData');
-      
+
       final userId = _client.auth.currentUser!.id;
-      
+
       final data = {
         'user_id': userId,
         'created_at': DateTime.now().toIso8601String(),
         'status': 'pending',
         ...appointmentData,
       };
-      
+
       final response = await _client
           .from('vaccine_appointments')
           .insert(data)
           .select()
           .single();
-      
+
       return response;
     } catch (e) {
       print('Error creating vaccine appointment: $e');
       throw Exception('Failed to create vaccine appointment: $e');
     }
   }
-  
+
   // Cancel a vaccine appointment
   Future<void> cancelVaccineAppointment(String appointmentId) async {
     try {
       if (!isAuthenticated) {
         throw Exception('User not authenticated');
       }
-      
+
       // Using real Supabase query
       print('Cancelling vaccine appointment with ID: $appointmentId');
-      
+
       final userId = _client.auth.currentUser!.id;
-      
+
       await _client
           .from('vaccine_appointments')
           .update({'status': 'cancelled'})
@@ -813,62 +958,83 @@ class SupabaseService with ChangeNotifier {
       throw Exception('Failed to cancel vaccine appointment: $e');
     }
   }
-  
+
   // Get available vaccine types
   Future<List<Map<String, dynamic>>> getVaccineTypes() async {
     try {
       // Using real Supabase query
       print('Getting vaccine types');
-      
+
       final response = await _client
           .from('vaccine_types')
           .select()
           .order('name', ascending: true);
-      
+
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {
       print('Error getting vaccine types: $e');
       // Return some default vaccine types if there's an error
       return [
-        {'id': '1', 'name': 'Rabies', 'description': 'Protection against rabies virus'},
-        {'id': '2', 'name': 'Distemper', 'description': 'Protection against canine distemper'},
-        {'id': '3', 'name': 'Parvovirus', 'description': 'Protection against parvovirus'},
-        {'id': '4', 'name': 'Bordetella', 'description': 'Protection against kennel cough'},
-        {'id': '5', 'name': 'Leptospirosis', 'description': 'Protection against leptospirosis'},
+        {
+          'id': '1',
+          'name': 'Rabies',
+          'description': 'Protection against rabies virus'
+        },
+        {
+          'id': '2',
+          'name': 'Distemper',
+          'description': 'Protection against canine distemper'
+        },
+        {
+          'id': '3',
+          'name': 'Parvovirus',
+          'description': 'Protection against parvovirus'
+        },
+        {
+          'id': '4',
+          'name': 'Bordetella',
+          'description': 'Protection against kennel cough'
+        },
+        {
+          'id': '5',
+          'name': 'Leptospirosis',
+          'description': 'Protection against leptospirosis'
+        },
       ];
     }
   }
 
   // Create a new order
-  Future<Map<String, dynamic>> createOrder(Map<String, dynamic> orderData) async {
+  Future<Map<String, dynamic>> createOrder(
+      Map<String, dynamic> orderData) async {
     try {
       if (!isAuthenticated) {
         throw Exception('User not authenticated');
       }
-      
+
       // Instead of creating in Supabase, just return the data with an ID
       print('Creating mock order with data: $orderData');
-      
+
       // Simulate a delay to make it feel like a real API call
       await Future.delayed(const Duration(seconds: 1));
-      
+
       // Add user ID if not present
       if (!orderData.containsKey('user_id')) {
         orderData['user_id'] = _client.auth.currentUser?.id ?? 'user123';
       }
-      
+
       // Add created_at if not present
       if (!orderData.containsKey('created_at')) {
         orderData['created_at'] = DateTime.now().toIso8601String();
       }
-      
+
       // Add order ID if not present
       if (!orderData.containsKey('id')) {
         orderData['id'] = 'order_${DateTime.now().millisecondsSinceEpoch}';
       }
-      
+
       return orderData;
-      
+
       // Original Supabase code (commented out)
       /*
       final userId = _client.auth.currentUser!.id;
@@ -903,69 +1069,67 @@ class SupabaseService with ChangeNotifier {
       throw Exception('Failed to create order: $e');
     }
   }
-  
+
   // Get user pets
   Future<List<Map<String, dynamic>>> getUserPets() async {
     if (!isAuthenticated) {
       throw Exception('User not authenticated');
     }
-    
+
     try {
       // Use real Supabase query
       print('Getting pets for user ID: ${_user!.id}');
-      
+
       final response = await _client
           .from('pets')
           .select('*')
           .eq('user_id', _user!.id)
           .order('name', ascending: true);
-      
+
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {
       print('Error getting user pets: $e');
       throw Exception('Failed to get user pets: $e');
     }
   }
-  
+
   // Add a new pet
   Future<Map<String, dynamic>> addPet(Map<String, dynamic> petData) async {
     if (!isAuthenticated) {
       throw Exception('User not authenticated');
     }
-    
+
     try {
       // Add user ID
       petData['user_id'] = _user!.id;
-      
+
       // Add timestamps
       final now = DateTime.now().toIso8601String();
       petData['created_at'] = now;
       petData['updated_at'] = now;
-      
+
       // Insert pet into pets table
-      final response = await _client
-          .from('pets')
-          .insert(petData)
-          .select()
-          .single();
-      
+      final response =
+          await _client.from('pets').insert(petData).select().single();
+
       return response;
     } catch (e) {
       print('Error adding pet: $e');
       throw Exception('Failed to add pet: $e');
     }
   }
-  
+
   // Update a pet
-  Future<Map<String, dynamic>> updatePet(String petId, Map<String, dynamic> petData) async {
+  Future<Map<String, dynamic>> updatePet(
+      String petId, Map<String, dynamic> petData) async {
     if (!isAuthenticated) {
       throw Exception('User not authenticated');
     }
-    
+
     try {
       // Add updated_at timestamp
       petData['updated_at'] = DateTime.now().toIso8601String();
-      
+
       // Update pet in pets table
       final response = await _client
           .from('pets')
@@ -974,20 +1138,20 @@ class SupabaseService with ChangeNotifier {
           .eq('user_id', _user!.id)
           .select()
           .single();
-      
+
       return response;
     } catch (e) {
       print('Error updating pet: $e');
       throw Exception('Failed to update pet: $e');
     }
   }
-  
+
   // Delete a pet
   Future<void> deletePet(String petId) async {
     if (!isAuthenticated) {
       throw Exception('User not authenticated');
     }
-    
+
     try {
       await _client
           .from('pets')
@@ -1004,17 +1168,35 @@ class SupabaseService with ChangeNotifier {
   Future<Map<String, dynamic>> getProductById(String id) async {
     try {
       print('Getting product with ID: $id');
-      
+
       final response = await _client
           .from('products')
           .select('*, categories(*)')
           .eq('id', id)
           .single();
-      
+
       return response;
     } catch (e) {
       print('Error getting product details: $e');
       throw Exception('Failed to load product details: $e');
     }
   }
-} 
+
+  // Get adoptable pet by ID
+  Future<Map<String, dynamic>> getAdoptablePetById(String id) async {
+    try {
+      print('Getting adoptable pet with ID: $id');
+
+      final response = await _client
+          .from('adoptable_pets')
+          .select('*')
+          .eq('id', id)
+          .single();
+
+      return response;
+    } catch (e) {
+      print('Error getting adoptable pet details: $e');
+      throw Exception('Failed to load adoptable pet details: $e');
+    }
+  }
+}

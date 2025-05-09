@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../models/order_tracking.dart';
 import '../services/supabase_service.dart';
+import '../utils/string_extensions.dart';
 
 class OrderTrackingPage extends StatefulWidget {
   final String orderId;
@@ -254,6 +255,7 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
               children: [
                 _buildMapSection(),
                 _buildDeliveryInfo(),
+                _buildManualStatusUpdate(),
                 _buildTrackingTimeline(),
               ],
             ),
@@ -546,5 +548,197 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
         ),
       ],
     );
+  }
+
+  // Add a button to manually update status (for demo purposes)
+  Widget _buildManualStatusUpdate() {
+    final availableStatuses = [
+      'processing',
+      'shipped',
+      'out_for_delivery',
+      'delivered'
+    ];
+
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Testing Tools',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.help_outline),
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                            'These controls are for testing the tracking feature'),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+            const Divider(),
+            const Text(
+              'Update Order Status:',
+              style: TextStyle(fontWeight: FontWeight.w500),
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              height: 40,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                children: availableStatuses.map((status) {
+                  final isCurrentStatus = _tracking?.status
+                          .toString()
+                          .toLowerCase()
+                          .contains(status) ??
+                      false;
+
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: ElevatedButton(
+                      onPressed: isCurrentStatus
+                          ? null
+                          : () => _updateOrderStatus(status),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: isCurrentStatus
+                            ? Colors.grey
+                            : const Color.fromARGB(255, 40, 108, 100),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                      ),
+                      child: Text(
+                        status.replaceAll('_', ' ').capitalize(),
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Update Current Location:',
+              style: TextStyle(fontWeight: FontWeight.w500),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: _simulateLocationUpdate,
+                    icon: const Icon(Icons.location_on, size: 16),
+                    label: const Text('Simulate Movement'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color.fromARGB(255, 40, 108, 100),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Update order status
+  Future<void> _updateOrderStatus(String newStatus) async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final supabaseService =
+          Provider.of<SupabaseService>(context, listen: false);
+      await supabaseService.updateOrderStatus(widget.orderId, newStatus);
+      await _loadTrackingData(); // Refresh data
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Order status updated to $newStatus'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error updating status: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  // Simulate location movement
+  Future<void> _simulateLocationUpdate() async {
+    if (_tracking == null) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final supabaseService =
+          Provider.of<SupabaseService>(context, listen: false);
+
+      // Get current coordinates
+      final currentLat = _tracking!.currentLocation.latitude;
+      final currentLng = _tracking!.currentLocation.longitude;
+
+      // Get target coordinates
+      final targetLat = _tracking!.destinationLocation.latitude;
+      final targetLng = _tracking!.destinationLocation.longitude;
+
+      // Calculate a position 20% closer to the target
+      final newLat = currentLat + (targetLat - currentLat) * 0.2;
+      final newLng = currentLng + (targetLng - currentLng) * 0.2;
+
+      await supabaseService.updateOrderLocation(widget.orderId, newLat, newLng);
+      await _loadTrackingData(); // Refresh data
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Location updated'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error updating location: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 }
