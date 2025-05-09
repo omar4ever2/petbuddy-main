@@ -6,7 +6,6 @@ import '../screens/edit_profile_page.dart';
 import '../screens/settings_page.dart';
 import '../screens/help_center_page.dart';
 import '../screens/order_history_page.dart';
-import '../screens/my_pets_page.dart';
 import '../providers/theme_provider.dart';
 import 'favorites_page.dart';
 import 'vaccine_booking_page.dart';
@@ -520,18 +519,6 @@ class _ProfilePageState extends State<ProfilePage> {
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const OrderHistoryPage()),
-            );
-          },
-        ),
-        _buildActivityCard(
-          isDarkMode,
-          Icons.pets_outlined,
-          'My Pets',
-          'Manage your pet profiles',
-          () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const MyPetsPage()),
             );
           },
         ),
