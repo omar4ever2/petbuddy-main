@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/cart_provider.dart';
 import '../providers/theme_provider.dart';
+import '../services/supabase_service.dart';
 
 class CheckoutPage extends StatefulWidget {
   const CheckoutPage({Key? key}) : super(key: key);
@@ -524,11 +525,56 @@ class _CheckoutPageState extends State<CheckoutPage> {
     });
 
     try {
-      // Simulate order processing
-      await Future.delayed(const Duration(seconds: 2));
-
-      // Get cart provider
+      // Get cart provider and supabase service
       final cartProvider = Provider.of<CartProvider>(context, listen: false);
+      final supabaseService =
+          Provider.of<SupabaseService>(context, listen: false);
+
+      // Check if cart is not empty
+      if (cartProvider.items.isEmpty) {
+        throw Exception('Your cart is empty');
+      }
+
+      // Prepare shipping address data
+      final shippingAddress = {
+        'name': _nameController.text,
+        'phone': _phoneController.text,
+        'address': _addressController.text,
+        'city': _cityController.text,
+      };
+
+      // Calculate totals
+      final subtotal = cartProvider.totalAmount;
+      const shipping = 15.0;
+      final total = subtotal + shipping;
+
+      // Prepare order items
+      final orderItems = cartProvider.items.entries.map((entry) {
+        return {
+          'product_id': entry.key,
+          'name': entry.value.name,
+          'price': entry.value.price,
+          'quantity': entry.value.quantity,
+          'image_url': entry.value.imageUrl,
+        };
+      }).toList();
+
+      // Create order data
+      final orderData = {
+        'total_amount': total,
+        'shipping_amount': shipping,
+        'payment_method': _paymentMethod,
+        'shipping_address': shippingAddress,
+        'status': 'pending',
+        'items': orderItems,
+      };
+
+      print('Submitting order with ${orderItems.length} items');
+
+      // Send to Supabase
+      final order = await supabaseService.createOrder(orderData);
+
+      print('Order created successfully with ID: ${order['id']}');
 
       // Clear the cart after successful order
       cartProvider.clear();
@@ -555,7 +601,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Order #${DateTime.now().millisecondsSinceEpoch.toString().substring(5, 13)}',
+                  'Order #${order['id'].toString().substring(0, 8)}',
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     color: Color.fromARGB(255, 40, 108, 100),
@@ -577,6 +623,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
         );
       }
     } catch (e) {
+      print('Error submitting order: $e');
       // Show error message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

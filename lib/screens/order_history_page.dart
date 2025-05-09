@@ -164,7 +164,12 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
   Widget _buildOrderCard(Map<String, dynamic> order) {
     final dateFormat = DateFormat('MMM dd, yyyy');
     final orderDate = DateTime.parse(order['created_at']);
-    final items = List<Map<String, dynamic>>.from(order['items']);
+
+    // Handle the case where items might be null
+    final items = order['items'] != null
+        ? List<Map<String, dynamic>>.from(order['items'])
+        : <Map<String, dynamic>>[];
+
     final totalItems =
         items.fold<int>(0, (sum, item) => sum + (item['quantity'] as int));
 
@@ -357,7 +362,11 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
   void _showOrderDetails(Map<String, dynamic> order) {
     final dateFormat = DateFormat('MMM dd, yyyy hh:mm a');
     final orderDate = DateTime.parse(order['created_at']);
-    final items = List<Map<String, dynamic>>.from(order['items']);
+
+    // Handle the case where items might be null
+    final items = order['items'] != null
+        ? List<Map<String, dynamic>>.from(order['items'])
+        : <Map<String, dynamic>>[];
 
     showModalBottomSheet(
       context: context,

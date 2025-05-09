@@ -513,7 +513,26 @@ class SupabaseService with ChangeNotifier {
           .eq('user_id', _user!.id)
           .order('created_at', ascending: false);
 
-      return List<Map<String, dynamic>>.from(response);
+      // Transform the response to ensure a consistent format with items array
+      final transformedOrders =
+          List<Map<String, dynamic>>.from(response).map((order) {
+        // Extract order_items from the nested structure
+        final orderItems = order['order_items'];
+
+        // Remove the original nested structure
+        order.remove('order_items');
+
+        // Add items as a list, ensuring it's never null
+        order['items'] = orderItems != null
+            ? List<Map<String, dynamic>>.from(orderItems)
+            : [];
+
+        return order;
+      }).toList();
+
+      print(
+          'Retrieved ${transformedOrders.length} orders for user ${_user!.id}');
+      return transformedOrders;
     } catch (e) {
       print('Error getting user orders: $e');
       throw Exception('Failed to get user orders: $e');
@@ -1006,58 +1025,68 @@ class SupabaseService with ChangeNotifier {
         throw Exception('User not authenticated');
       }
 
-      // Instead of creating in Supabase, just return the data with an ID
-      print('Creating mock order with data: $orderData');
+      print('Creating order with data: $orderData');
 
-      // Simulate a delay to make it feel like a real API call
-      await Future.delayed(const Duration(seconds: 1));
+      final userId = _client.auth.currentUser!.id;
 
-      // Add user ID if not present
-      if (!orderData.containsKey('user_id')) {
-        orderData['user_id'] = _client.auth.currentUser?.id ?? 'user123';
-      }
+      // Add user ID to order data
+      orderData['user_id'] = userId;
 
-      // Add created_at if not present
+      // Add created_at timestamp if not present
       if (!orderData.containsKey('created_at')) {
         orderData['created_at'] = DateTime.now().toIso8601String();
       }
 
-      // Add order ID if not present
-      if (!orderData.containsKey('id')) {
-        orderData['id'] = 'order_${DateTime.now().millisecondsSinceEpoch}';
+      // Ensure we have the items list
+      if (!orderData.containsKey('items') ||
+          (orderData['items'] as List).isEmpty) {
+        throw Exception('Order must contain at least one item');
       }
 
-      return orderData;
+      // Extract items to be inserted separately
+      final items = List<Map<String, dynamic>>.from(orderData['items'] as List);
 
-      // Original Supabase code (commented out)
-      /*
-      final userId = _client.auth.currentUser!.id;
-      
-      // Add user ID to order data
-      orderData['user_id'] = userId;
-      
-      // Add created_at timestamp
-      orderData['created_at'] = DateTime.now().toIso8601String();
-      
+      // Remove items from the order data as they go in a separate table
+      orderData.remove('items');
+
       // Insert order into orders table
-      final orderResponse = await _client
-          .from('orders')
-          .insert(orderData)
-          .select()
-          .single();
-      
+      final orderResponse =
+          await _client.from('orders').insert(orderData).select().single();
+
+      print('Order created with ID: ${orderResponse['id']}');
+
       // Get order ID
       final orderId = orderResponse['id'];
-      
+
       // Insert order items
-      final items = orderData['items'] as List;
       for (var item in items) {
         item['order_id'] = orderId;
         await _client.from('order_items').insert(item);
       }
-      
-      return orderResponse;
-      */
+
+      print('Added ${items.length} items to order $orderId');
+
+      // Fetch the complete order with items
+      final completeOrder = await _client
+          .from('orders')
+          .select('*, order_items(*)')
+          .eq('id', orderId)
+          .single();
+
+      // Transform the order to ensure a consistent format
+      final transformedOrder = Map<String, dynamic>.from(completeOrder);
+
+      // Extract order items from the nested structure
+      final orderItems = transformedOrder['order_items'];
+
+      // Remove the nested structure
+      transformedOrder.remove('order_items');
+
+      // Add items as a list, ensuring it's never null
+      transformedOrder['items'] =
+          orderItems != null ? List<Map<String, dynamic>>.from(orderItems) : [];
+
+      return transformedOrder;
     } catch (e) {
       print('Error creating order: $e');
       throw Exception('Failed to create order: $e');
