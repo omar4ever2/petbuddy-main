@@ -34,6 +34,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
       final supabaseService =
           Provider.of<SupabaseService>(context, listen: false);
       if (!supabaseService.isAuthenticated) {
+        print('FavoritesPage: User is not authenticated');
         setState(() {
           _errorMessage = 'Please sign in to see your favorites';
           _isLoading = false;
@@ -41,6 +42,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
         return;
       }
 
+      print('FavoritesPage: User is authenticated, loading favorites');
       final favoritesProvider =
           Provider.of<FavoritesProvider>(context, listen: false);
 
@@ -48,20 +50,20 @@ class _FavoritesPageState extends State<FavoritesPage> {
       await favoritesProvider.refreshFavorites();
 
       // Debug: Print favorite IDs
-      print('Favorite IDs: ${favoritesProvider.favoriteIds}');
+      print('FavoritesPage: Favorite IDs: ${favoritesProvider.favoriteIds}');
 
       // Get favorite products with details
       final products = await supabaseService.getFavoriteProducts();
 
       // Debug: Print retrieved products
-      print('Retrieved ${products.length} favorite products: $products');
+      print('FavoritesPage: Retrieved ${products.length} favorite products');
 
       setState(() {
         _favoriteProducts = products;
         _isLoading = false;
       });
     } catch (e) {
-      print('Error loading favorite products: $e');
+      print('FavoritesPage: Error loading favorite products: $e');
       setState(() {
         _errorMessage = 'Error loading favorites: $e';
         _isLoading = false;

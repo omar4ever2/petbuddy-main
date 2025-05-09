@@ -57,39 +57,55 @@ class FavoritesProvider with ChangeNotifier {
 
   Future<void> addFavorite(String id) async {
     if (!_favoriteIds.contains(id)) {
-      _favoriteIds.add(id);
-      notifyListeners();
+      print('FavoritesProvider: Adding product $id to favorites');
 
       // Sync with Supabase if authenticated
       if (_supabaseService != null && _supabaseService!.isAuthenticated) {
         try {
           await _supabaseService!.addToFavorites(id);
-        } catch (e) {
-          // Revert on error
-          _favoriteIds.remove(id);
+          // Only add to local list after successful Supabase operation
+          _favoriteIds.add(id);
           notifyListeners();
-          debugPrint('Error adding favorite: $e');
+          print('FavoritesProvider: Added product $id to favorites');
+        } catch (e) {
+          print('FavoritesProvider: Error adding favorite: $e');
+          // Notify error through SnackBar or other means
+          rethrow;
         }
+      } else {
+        print('FavoritesProvider: Not authenticated, adding only locally');
+        _favoriteIds.add(id);
+        notifyListeners();
       }
+    } else {
+      print('FavoritesProvider: Product $id is already in favorites');
     }
   }
 
   Future<void> removeFavorite(String id) async {
     if (_favoriteIds.contains(id)) {
-      _favoriteIds.remove(id);
-      notifyListeners();
+      print('FavoritesProvider: Removing product $id from favorites');
 
       // Sync with Supabase if authenticated
       if (_supabaseService != null && _supabaseService!.isAuthenticated) {
         try {
           await _supabaseService!.removeFromFavorites(id);
-        } catch (e) {
-          // Revert on error
-          _favoriteIds.add(id);
+          // Only remove from local list after successful Supabase operation
+          _favoriteIds.remove(id);
           notifyListeners();
-          debugPrint('Error removing favorite: $e');
+          print('FavoritesProvider: Removed product $id from favorites');
+        } catch (e) {
+          print('FavoritesProvider: Error removing favorite: $e');
+          // Notify error through SnackBar or other means
+          rethrow;
         }
+      } else {
+        print('FavoritesProvider: Not authenticated, removing only locally');
+        _favoriteIds.remove(id);
+        notifyListeners();
       }
+    } else {
+      print('FavoritesProvider: Product $id is not in favorites');
     }
   }
 

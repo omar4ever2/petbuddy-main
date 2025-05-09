@@ -177,31 +177,49 @@ class SupabaseService with ChangeNotifier {
 
   // Add product to favorites
   Future<void> addToFavorites(String productId) async {
-    if (_user == null) return;
+    if (_user == null) {
+      print('addToFavorites: User is null, cannot add to favorites');
+      throw Exception('User not authenticated');
+    }
 
     try {
+      print(
+          'addToFavorites: Adding product $productId to favorites for user ${_user!.id}');
+
       await _client.from('favorites').insert({
         'user_id': _user!.id,
         'product_id': productId,
       });
+
+      print('addToFavorites: Successfully added product to favorites');
       notifyListeners();
     } catch (e) {
+      print('Error in addToFavorites: $e');
       rethrow;
     }
   }
 
   // Remove product from favorites
   Future<void> removeFromFavorites(String productId) async {
-    if (_user == null) return;
+    if (_user == null) {
+      print('removeFromFavorites: User is null, cannot remove from favorites');
+      throw Exception('User not authenticated');
+    }
 
     try {
-      await _client
+      print(
+          'removeFromFavorites: Removing product $productId from favorites for user ${_user!.id}');
+
+      final result = await _client
           .from('favorites')
           .delete()
           .eq('user_id', _user!.id)
           .eq('product_id', productId);
+
+      print('removeFromFavorites: Successfully removed product from favorites');
       notifyListeners();
     } catch (e) {
+      print('Error in removeFromFavorites: $e');
       rethrow;
     }
   }
@@ -223,6 +241,11 @@ class SupabaseService with ChangeNotifier {
 
       print('getFavoriteIds: Raw response: $response');
 
+      if (response == null) {
+        print('getFavoriteIds: Response is null');
+        return [];
+      }
+
       final ids = List<String>.from(
         response.map((item) => item['product_id'] as String),
       );
@@ -243,36 +266,74 @@ class SupabaseService with ChangeNotifier {
     }
 
     try {
-      // Get favorite product IDs
-      final favoriteIds = await getFavoriteIds();
+      print('getFavoriteProducts: Fetching favorites for user ${_user!.id}');
 
-      if (favoriteIds.isEmpty) {
-        print('getFavoriteProducts: No favorite IDs found');
+      // First approach: Join favorites with products in a single query
+      final response = await _client
+          .from('favorites')
+          .select('product_id, products(*)')
+          .eq('user_id', _user!.id);
+
+      print('getFavoriteProducts: Raw response: $response');
+
+      if (response == null || response.isEmpty) {
+        print('getFavoriteProducts: No favorites found');
         return [];
       }
 
-      print('getFavoriteProducts: Fetching products for IDs: $favoriteIds');
-
-      // Fetch full product details for each favorite ID
-      final response =
-          await _client.from('products').select('*').in_('id', favoriteIds);
-
-      print('getFavoriteProducts: Raw response length: ${response.length}');
-      print('getFavoriteProducts: Raw response: $response');
-
-      final products = List<Map<String, dynamic>>.from(response.map((product) {
-        // Ensure the image field is correctly mapped
-        return {
-          ...product,
-          'image': product['image_url'] ?? product['image'],
-        };
-      }));
+      // Extract the product data from the response
+      final products = List<Map<String, dynamic>>.from(
+        response.map((item) {
+          final product = item['products'] as Map<String, dynamic>;
+          // Ensure the image field is correctly mapped
+          return {
+            ...product,
+            'image': product['image_url'] ?? product['image'],
+          };
+        }),
+      );
 
       print('getFavoriteProducts: Returning ${products.length} products');
       return products;
     } catch (e) {
       print('Error in getFavoriteProducts: $e');
-      return [];
+
+      // Fallback approach: Get IDs first, then fetch products individually
+      try {
+        // Get favorite product IDs
+        final favoriteIds = await getFavoriteIds();
+
+        if (favoriteIds.isEmpty) {
+          print('getFavoriteProducts fallback: No favorite IDs found');
+          return [];
+        }
+
+        print(
+            'getFavoriteProducts fallback: Fetching products for IDs: $favoriteIds');
+
+        // Fetch full product details for each favorite ID
+        final productsResponse =
+            await _client.from('products').select('*').in_('id', favoriteIds);
+
+        print(
+            'getFavoriteProducts fallback: Response length: ${productsResponse.length}');
+
+        final products =
+            List<Map<String, dynamic>>.from(productsResponse.map((product) {
+          // Ensure the image field is correctly mapped
+          return {
+            ...product,
+            'image': product['image_url'] ?? product['image'],
+          };
+        }));
+
+        print(
+            'getFavoriteProducts fallback: Returning ${products.length} products');
+        return products;
+      } catch (fallbackError) {
+        print('Error in getFavoriteProducts fallback: $fallbackError');
+        return [];
+      }
     }
   }
 
