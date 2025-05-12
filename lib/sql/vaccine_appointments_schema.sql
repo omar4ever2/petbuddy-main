@@ -71,6 +71,15 @@ INSERT INTO public.vaccine_types (name, description, pet_type)
 SELECT 'Psittacine Beak and Feather Disease', 'Protection against PBFD virus', 'Bird'
 WHERE NOT EXISTS (SELECT 1 FROM public.vaccine_types WHERE name = 'Psittacine Beak and Feather Disease');
 
+-- Add rabbit-specific vaccines
+INSERT INTO public.vaccine_types (name, description, pet_type)
+SELECT 'Myxomatosis', 'Protection against myxomatosis virus', 'Rabbit'
+WHERE NOT EXISTS (SELECT 1 FROM public.vaccine_types WHERE name = 'Myxomatosis');
+
+INSERT INTO public.vaccine_types (name, description, pet_type)
+SELECT 'R(V)HD', 'Protection against Rabbit Viral Haemorrhagic Disease', 'Rabbit'
+WHERE NOT EXISTS (SELECT 1 FROM public.vaccine_types WHERE name = 'R(V)HD');
+
 -- Create Row Level Security policies
 ALTER TABLE public.vaccine_appointments ENABLE ROW LEVEL SECURITY;
 

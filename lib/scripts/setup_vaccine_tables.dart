@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:io';
 
@@ -134,9 +133,53 @@ CREATE POLICY IF NOT EXISTS view_vaccine_types ON public.vaccine_types
       await client.rpc('exec_sql', params: {'query': rlsPolicies});
       print('✅ RLS policies created successfully');
 
+      // Add new rabbit vaccines
+      await _addRabbitVaccines();
+
       print('✅ Vaccine tables setup complete!');
     } catch (e) {
       print('❌ Error setting up vaccine tables: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> _addRabbitVaccines() async {
+    try {
+      // Check if Myxomatosis vaccine already exists
+      final myxoExists = await client
+          .from('vaccine_types')
+          .select('id')
+          .eq('name', 'Myxomatosis')
+          .maybeSingle();
+
+      // Add Myxomatosis vaccine if it doesn't exist
+      if (myxoExists == null) {
+        await client.from('vaccine_types').insert({
+          'name': 'Myxomatosis',
+          'description': 'Protection against myxomatosis virus',
+          'pet_type': 'Rabbit'
+        });
+        print('Added Myxomatosis vaccine for rabbits');
+      }
+
+      // Check if R(V)HD vaccine already exists
+      final rvhdExists = await client
+          .from('vaccine_types')
+          .select('id')
+          .eq('name', 'R(V)HD')
+          .maybeSingle();
+
+      // Add R(V)HD vaccine if it doesn't exist
+      if (rvhdExists == null) {
+        await client.from('vaccine_types').insert({
+          'name': 'R(V)HD',
+          'description': 'Protection against Rabbit Viral Haemorrhagic Disease',
+          'pet_type': 'Rabbit'
+        });
+        print('Added R(V)HD vaccine for rabbits');
+      }
+    } catch (e) {
+      print('Error adding rabbit vaccines: $e');
       rethrow;
     }
   }

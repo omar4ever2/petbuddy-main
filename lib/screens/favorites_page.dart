@@ -168,9 +168,9 @@ class _FavoritesPageState extends State<FavoritesPage> {
                         color: Colors.red[300],
                       ),
                       const SizedBox(height: 16),
-                      Text(
+                      const Text(
                         'Something went wrong',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
                         ),

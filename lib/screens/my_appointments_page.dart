@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 import '../services/supabase_service.dart';
 import '../models/vaccine_appointment.dart';
 import '../utils/theme_utils.dart';
@@ -106,7 +105,7 @@ class _MyAppointmentsPageState extends State<MyAppointmentsPage> {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final themeColor = ThemeUtils.themeColor;
+    const themeColor = ThemeUtils.themeColor;
 
     return Scaffold(
       backgroundColor: ThemeUtils.backgroundColor(isDarkMode),
@@ -164,7 +163,7 @@ class _MyAppointmentsPageState extends State<MyAppointmentsPage> {
               color: ThemeUtils.themeColor.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
-            child: Icon(
+            child: const Icon(
               Icons.calendar_today_outlined,
               size: 70,
               color: ThemeUtils.themeColor,

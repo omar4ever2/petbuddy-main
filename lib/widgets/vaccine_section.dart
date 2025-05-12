@@ -178,7 +178,7 @@ class VaccineSection extends StatelessWidget {
             child: Text(
               'View My Appointments',
               style: TextStyle(
-                color: themeColor,
+                color: Colors.white,
                 fontWeight: FontWeight.w500,
               ),
             ),

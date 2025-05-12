@@ -71,9 +71,21 @@ class _VaccineBookingPageState extends State<VaccineBookingPage>
         return vaccine['pet_type'] == null || vaccine['pet_type'] == _petType;
       }).toList();
 
-      // Set default vaccine type if none selected
-      if (_vaccineType == null && _filteredVaccineTypes.isNotEmpty) {
-        _vaccineType = _filteredVaccineTypes[0]['name'];
+      // Reset vaccine type if it's not in the filtered list
+      if (_filteredVaccineTypes.isEmpty) {
+        _vaccineType = null;
+      } else {
+        // Check if current vaccine type exists in filtered list
+        bool vaccineTypeExists = false;
+        if (_vaccineType != null) {
+          vaccineTypeExists = _filteredVaccineTypes
+              .any((vaccine) => vaccine['name'] == _vaccineType);
+        }
+
+        // If current vaccine type doesn't exist in filtered list, set to first one
+        if (!vaccineTypeExists) {
+          _vaccineType = _filteredVaccineTypes[0]['name'];
+        }
       }
     });
   }
@@ -685,7 +697,8 @@ class _VaccineBookingPageState extends State<VaccineBookingPage>
                       ),
                     )
                   : DropdownButtonFormField<String>(
-                      value: _vaccineType,
+                      value:
+                          _filteredVaccineTypes.isEmpty ? null : _vaccineType,
                       decoration: InputDecoration(
                         labelText: 'Vaccine Type',
                         border: OutlineInputBorder(

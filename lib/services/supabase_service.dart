@@ -983,7 +983,18 @@ class SupabaseService with ChangeNotifier {
           .select()
           .order('name', ascending: true);
 
-      return List<Map<String, dynamic>>.from(response);
+      // Convert to list and ensure no duplicates by name
+      final vaccineList = List<Map<String, dynamic>>.from(response);
+      final uniqueVaccines = <String>{};
+
+      return vaccineList.where((vaccine) {
+        final name = vaccine['name'] as String;
+        final isUnique = !uniqueVaccines.contains(name);
+        if (isUnique) {
+          uniqueVaccines.add(name);
+        }
+        return isUnique;
+      }).toList();
     } catch (e) {
       print('Error getting vaccine types: $e');
       // Return some default vaccine types if there's an error

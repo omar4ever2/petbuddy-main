@@ -282,7 +282,7 @@ class _AdoptablePetDetailsPageState extends State<AdoptablePetDetailsPage> {
                         color: Colors.green.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      child: Text(
+                      child: const Text(
                         'Free Adoption',
                         style: TextStyle(
                           fontSize: 16,
