@@ -1257,4 +1257,174 @@ class SupabaseService with ChangeNotifier {
       return [];
     }
   }
+
+  // Get available pet walkers
+  Future<List<Map<String, dynamic>>> getAvailablePetWalkers() async {
+    try {
+      print('Getting available pet walkers');
+
+      final response = await _client
+          .from('pet_walkers')
+          .select('*')
+          .eq('is_available', true)
+          .order('rating', ascending: false);
+
+      return List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      print('Error getting pet walkers: $e');
+      return [];
+    }
+  }
+
+  // Get pet walker details
+  Future<Map<String, dynamic>> getPetWalkerDetails(String walkerId) async {
+    try {
+      print('Getting details for walker ID: $walkerId');
+
+      final response = await _client
+          .from('pet_walkers')
+          .select('*')
+          .eq('id', walkerId)
+          .single();
+
+      return response;
+    } catch (e) {
+      print('Error getting walker details: $e');
+      throw Exception('Failed to load walker details: $e');
+    }
+  }
+
+  // Schedule a pet walk
+  Future<Map<String, dynamic>> schedulePetWalk(
+      Map<String, dynamic> walkData) async {
+    if (!isAuthenticated) {
+      throw Exception('User not authenticated');
+    }
+
+    try {
+      print('Scheduling pet walk with data: $walkData');
+
+      // Add user ID and timestamp
+      walkData['user_id'] = _user!.id;
+      walkData['created_at'] = DateTime.now().toIso8601String();
+      walkData['status'] = 'pending';
+
+      final response =
+          await _client.from('pet_walks').insert(walkData).select().single();
+
+      return response;
+    } catch (e) {
+      print('Error scheduling pet walk: $e');
+      throw Exception('Failed to schedule pet walk: $e');
+    }
+  }
+
+  // Get user's pet walks
+  Future<List<Map<String, dynamic>>> getUserPetWalks() async {
+    if (!isAuthenticated) {
+      throw Exception('User not authenticated');
+    }
+
+    try {
+      print('Getting pet walks for user: ${_user!.id}');
+
+      final response = await _client
+          .from('pet_walks')
+          .select('*, pet_walkers(*)')
+          .eq('user_id', _user!.id)
+          .order('walk_date', ascending: true);
+
+      return List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      print('Error getting pet walks: $e');
+      return [];
+    }
+  }
+
+  // Cancel a pet walk
+  Future<void> cancelPetWalk(String walkId) async {
+    if (!isAuthenticated) {
+      throw Exception('User not authenticated');
+    }
+
+    try {
+      print('Cancelling pet walk with ID: $walkId');
+
+      await _client
+          .from('pet_walks')
+          .update({'status': 'cancelled'})
+          .eq('id', walkId)
+          .eq('user_id', _user!.id);
+    } catch (e) {
+      print('Error cancelling pet walk: $e');
+      throw Exception('Failed to cancel pet walk: $e');
+    }
+  }
+
+  // Rate a pet walker
+  Future<void> ratePetWalker(
+      String walkerId, double rating, String walkId) async {
+    if (!isAuthenticated) {
+      throw Exception('User not authenticated');
+    }
+
+    try {
+      print('Rating pet walker $walkerId with rating: $rating');
+
+      // Create/update the rating in the ratings table
+      await _client.from('walker_ratings').upsert({
+        'walker_id': walkerId,
+        'user_id': _user!.id,
+        'rating': rating,
+        'walk_id': walkId,
+        'created_at': DateTime.now().toIso8601String()
+      });
+
+      // Update the walk with the rating
+      await _client
+          .from('pet_walks')
+          .update({'walker_rating': rating})
+          .eq('id', walkId)
+          .eq('user_id', _user!.id);
+
+      // Calculate average rating and update the pet walker
+      final ratingResponse = await _client
+          .from('walker_ratings')
+          .select('rating')
+          .eq('walker_id', walkerId);
+
+      if (ratingResponse != null && ratingResponse.isNotEmpty) {
+        final ratings = List<double>.from(
+            ratingResponse.map((r) => (r['rating'] as num).toDouble()));
+        final averageRating = ratings.reduce((a, b) => a + b) / ratings.length;
+
+        await _client
+            .from('pet_walkers')
+            .update({'rating': averageRating}).eq('id', walkerId);
+      }
+    } catch (e) {
+      print('Error rating pet walker: $e');
+      throw Exception('Failed to rate pet walker: $e');
+    }
+  }
+
+  // Get pet walker availability for a specific date
+  Future<List<Map<String, dynamic>>> getPetWalkerAvailability(
+      String walkerId, String date) async {
+    try {
+      print('Getting availability for walker $walkerId on date: $date');
+
+      final response = await _client
+          .from('walker_availability')
+          .select('*')
+          .eq('walker_id', walkerId)
+          .eq('date', date)
+          .order('start_time', ascending: true);
+
+      return List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      print('Error getting walker availability: $e');
+      return [];
+    }
+  }
 }

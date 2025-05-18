@@ -73,7 +73,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
             children: [
               // App logo or icon
               const SizedBox(height: 32),
-              Icon(
+              const Icon(
                 Icons.lock_reset,
                 size: 80,
                 color: themeColor,

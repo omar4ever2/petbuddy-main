@@ -9,6 +9,7 @@ import '../screens/order_history_page.dart';
 import '../providers/theme_provider.dart';
 import 'favorites_page.dart';
 import 'vaccine_booking_page.dart';
+import 'my_pet_walks_page.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({Key? key}) : super(key: key);
@@ -544,6 +545,18 @@ class _ProfilePageState extends State<ProfilePage> {
               context,
               MaterialPageRoute(
                   builder: (context) => const VaccineBookingPage()),
+            );
+          },
+        ),
+        _buildActivityCard(
+          isDarkMode,
+          Icons.directions_walk_outlined,
+          'Pet Walkers',
+          'Schedule pet walks',
+          () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const MyPetWalksPage()),
             );
           },
         ),

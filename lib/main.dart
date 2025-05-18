@@ -2,10 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'screens/splash_screen.dart';
+import 'screens/pet_walkers_page.dart';
+import 'screens/book_pet_walk_page.dart';
+import 'screens/my_pet_walks_page.dart';
 import 'providers/cart_provider.dart';
 import 'providers/favorites_provider.dart';
 import 'providers/theme_provider.dart';
 import 'services/supabase_service.dart';
+import 'models/pet_walking.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -62,6 +66,19 @@ class MyApp extends StatelessWidget {
             debugShowCheckedModeBanner: false,
             theme: themeProvider.currentTheme,
             home: const SplashScreen(),
+            routes: {
+              '/pet_walkers': (context) => const PetWalkersPage(),
+              '/my_pet_walks': (context) => const MyPetWalksPage(),
+            },
+            onGenerateRoute: (settings) {
+              if (settings.name == '/book_pet_walk') {
+                final walker = settings.arguments as PetWalker;
+                return MaterialPageRoute(
+                  builder: (context) => BookPetWalkPage(walker: walker),
+                );
+              }
+              return null;
+            },
           );
         },
       ),

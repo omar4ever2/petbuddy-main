@@ -156,7 +156,7 @@ class _HomePageState extends State<HomePage> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const SizedBox(height: 8),
+                                  const fluttSizedBox(height: 8),
                                   _buildWelcomeSection(context),
                                   const SizedBox(height: 24),
                                   _buildCategories(),
@@ -164,6 +164,8 @@ class _HomePageState extends State<HomePage> {
                                   _buildFeaturedProducts(),
                                   const SizedBox(height: 24),
                                   const VaccineSection(),
+                                  const SizedBox(height: 24),
+                                  _buildPetWalkingSection(),
                                   const SizedBox(height: 24),
                                   _buildAdoptablePetsSection(),
                                   const SizedBox(height: 16),
@@ -688,6 +690,205 @@ class _HomePageState extends State<HomePage> {
                 },
               ),
       ],
+    );
+  }
+
+  Widget _buildPetWalkingSection() {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDarkMode = themeProvider.isDarkMode;
+    final Color themeColor = const Color.fromARGB(255, 40, 108, 100);
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            themeColor,
+            themeColor.withOpacity(0.7),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: isDarkMode
+                ? Colors.black.withOpacity(0.3)
+                : themeColor.withOpacity(0.3),
+            spreadRadius: 1,
+            blurRadius: 5,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.directions_walk,
+                      color: Colors.white,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Text(
+                    'Pet Walkers',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pushNamed(context, '/pet_walkers');
+                },
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.white,
+                ),
+                child: const Row(
+                  children: [
+                    Text(
+                      'See All',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(width: 4),
+                    Icon(Icons.arrow_forward_ios, size: 14),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'Professional walking service for your pets',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.check,
+                      color: themeColor,
+                      size: 12,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'Verified walkers',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(width: 24),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.check,
+                      color: themeColor,
+                      size: 12,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'Convenient scheduling',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/pet_walkers');
+                  },
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: themeColor,
+                    backgroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: const Text(
+                    'Book a Walker',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/my_pet_walks');
+                  },
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    backgroundColor: Colors.transparent,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: const BorderSide(color: Colors.white),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: const Text(
+                    'My Walks',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 

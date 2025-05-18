@@ -34,6 +34,7 @@ class CategoryItem extends StatelessWidget {
           children: [
             Container(
               height: 70,
+              margin: const EdgeInsets.only(top: 5),
               width: 70,
               decoration: BoxDecoration(
                 color: isDarkMode

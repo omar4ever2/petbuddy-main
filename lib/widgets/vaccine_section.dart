@@ -175,7 +175,7 @@ class VaccineSection extends StatelessWidget {
                 ),
               );
             },
-            child: Text(
+            child: const Text(
               'View My Appointments',
               style: TextStyle(
                 color: Colors.white,
