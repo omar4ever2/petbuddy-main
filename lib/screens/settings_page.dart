@@ -10,16 +10,14 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  bool _notificationsEnabled = true;
   bool _locationEnabled = true;
-  String _selectedLanguage = 'English';
   final Color themeColor = const Color.fromARGB(255, 40, 108, 100);
-  
+
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDarkMode = themeProvider.isDarkMode;
-    
+
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -42,10 +40,10 @@ class _SettingsPageState extends State<SettingsPage> {
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Column(
-        children: [
+                children: [
                   // Dark Mode Toggle
-          SwitchListTile(
-            title: const Text('Dark Mode'),
+                  SwitchListTile(
+                    title: const Text('Dark Mode'),
                     subtitle: const Text('Switch between light and dark theme'),
                     secondary: Container(
                       padding: const EdgeInsets.all(10),
@@ -59,89 +57,13 @@ class _SettingsPageState extends State<SettingsPage> {
                       ),
                     ),
                     value: isDarkMode,
-            onChanged: (value) {
+                    onChanged: (value) {
                       themeProvider.toggleTheme();
-            },
-          ),
-                  const Divider(),
-                  // Language Selector
-          ListTile(
-                    leading: Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: themeColor.withOpacity(0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.language,
-                        color: themeColor,
-                      ),
-                    ),
-            title: const Text('Language'),
-                    subtitle: Text(_selectedLanguage),
-            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                    onTap: _showLanguageDialog,
-                  ),
-                ],
-              ),
-            ),
-            
-            _buildSectionTitle('Notifications'),
-            Card(
-              margin: const EdgeInsets.only(bottom: 24),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Column(
-                children: [
-          SwitchListTile(
-            title: const Text('Push Notifications'),
-                    subtitle: const Text('Receive notifications about orders and promotions'),
-                    secondary: Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: themeColor.withOpacity(0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.notifications,
-                        color: themeColor,
-                      ),
-                    ),
-            value: _notificationsEnabled,
-            onChanged: (value) {
-              setState(() {
-                _notificationsEnabled = value;
-              });
-            },
-          ),
-          const Divider(),
-                  ListTile(
-                    leading: Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: themeColor.withOpacity(0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.email,
-                        color: themeColor,
-                      ),
-                    ),
-                    title: const Text('Email Preferences'),
-                    subtitle: const Text('Manage email notification settings'),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                    onTap: () {
-                      // Navigate to email preferences page
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Email preferences coming soon')),
-                      );
                     },
                   ),
                 ],
               ),
             ),
-            
             _buildSectionTitle('Privacy'),
             Card(
               margin: const EdgeInsets.only(bottom: 24),
@@ -172,7 +94,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     },
                   ),
                   const Divider(),
-          ListTile(
+                  ListTile(
                     leading: Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
@@ -193,7 +115,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     },
                   ),
                   const Divider(),
-          ListTile(
+                  ListTile(
                     leading: Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
@@ -207,15 +129,14 @@ class _SettingsPageState extends State<SettingsPage> {
                     ),
                     title: const Text('Clear Cache'),
                     subtitle: const Text('Clear temporary data'),
-            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-            onTap: () {
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                    onTap: () {
                       _showClearCacheDialog();
                     },
                   ),
                 ],
               ),
             ),
-            
             _buildSectionTitle('About'),
             Card(
               margin: const EdgeInsets.only(bottom: 24),
@@ -240,7 +161,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     subtitle: const Text('1.0.0'),
                   ),
                   const Divider(),
-          ListTile(
+                  ListTile(
                     leading: Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
@@ -253,16 +174,17 @@ class _SettingsPageState extends State<SettingsPage> {
                       ),
                     ),
                     title: const Text('Rate the App'),
-            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-            onTap: () {
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                    onTap: () {
                       // Open app store rating
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Rating feature coming soon')),
+                        const SnackBar(
+                            content: Text('Rating feature coming soon')),
                       );
-            },
-          ),
-          const Divider(),
-          ListTile(
+                    },
+                  ),
+                  const Divider(),
+                  ListTile(
                     leading: Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
@@ -276,14 +198,15 @@ class _SettingsPageState extends State<SettingsPage> {
                     ),
                     title: const Text('Send Feedback'),
                     trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-            onTap: () {
+                    onTap: () {
                       // Open feedback form
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Feedback feature coming soon')),
+                        const SnackBar(
+                            content: Text('Feedback feature coming soon')),
                       );
-            },
-          ),
-        ],
+                    },
+                  ),
+                ],
               ),
             ),
           ],
@@ -303,54 +226,6 @@ class _SettingsPageState extends State<SettingsPage> {
           color: Colors.grey[800],
         ),
       ),
-    );
-  }
-
-  void _showLanguageDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Select Language'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-        children: [
-          _buildLanguageOption('English'),
-          _buildLanguageOption('Spanish'),
-          _buildLanguageOption('French'),
-          _buildLanguageOption('German'),
-            _buildLanguageOption('Arabic'),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: themeColor),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLanguageOption(String language) {
-    return ListTile(
-      title: Text(language),
-      trailing: _selectedLanguage == language
-          ? Icon(Icons.check, color: themeColor)
-          : null,
-      onTap: () {
-        setState(() {
-          _selectedLanguage = language;
-        });
-        Navigator.pop(context);
-        
-        // Show confirmation
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Language changed to $language')),
-        );
-      },
     );
   }
 
@@ -392,7 +267,8 @@ class _SettingsPageState extends State<SettingsPage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Clear Cache'),
-        content: const Text('Are you sure you want to clear the app cache? This will not delete any of your personal data.'),
+        content: const Text(
+            'Are you sure you want to clear the app cache? This will not delete any of your personal data.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -404,7 +280,7 @@ class _SettingsPageState extends State<SettingsPage> {
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              
+
               // Show loading indicator
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Cache cleared successfully')),
@@ -419,4 +295,4 @@ class _SettingsPageState extends State<SettingsPage> {
       ),
     );
   }
-} 
+}

@@ -122,8 +122,13 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
   // Credit card type detection
   void _updateCardType(String cardNumber) {
+    // Remove all non-digits
+    cardNumber = cardNumber.replaceAll(RegExp(r'\D'), '');
+
     setState(() {
-      if (cardNumber.startsWith('4')) {
+      if (cardNumber.isEmpty) {
+        _cardType = '';
+      } else if (cardNumber.startsWith('4')) {
         _cardType = 'Visa';
       } else if (cardNumber.startsWith('5')) {
         _cardType = 'MasterCard';

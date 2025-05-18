@@ -156,7 +156,7 @@ class _HomePageState extends State<HomePage> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const fluttSizedBox(height: 8),
+                                  const SizedBox(height: 8),
                                   _buildWelcomeSection(context),
                                   const SizedBox(height: 24),
                                   _buildCategories(),
