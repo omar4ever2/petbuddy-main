@@ -52,7 +52,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
         _usernameController.text = profileData['username'] ?? '';
         _fullNameController.text = profileData['full_name'] ?? '';
-        _phoneController.text = profileData['phone'] ?? '';
+        _phoneController.text = profileData['phone_number'] ?? '';
         _currentAvatarUrl = profileData['avatar_url'];
       }
     } catch (e) {
@@ -106,7 +106,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       final profileData = {
         'username': _usernameController.text,
         'full_name': _fullNameController.text,
-        'phone': _phoneController.text,
+        'phone_number': _phoneController.text,
         'avatar_url': avatarUrl,
       };
 
