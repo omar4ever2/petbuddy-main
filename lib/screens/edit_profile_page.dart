@@ -164,7 +164,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           TextButton(
             onPressed: _isSaving ? null : _saveProfile,
             child: _isSaving
-                ? SizedBox(
+                ? const SizedBox(
                     width: 20,
                     height: 20,
                     child: CircularProgressIndicator(
@@ -172,7 +172,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       valueColor: AlwaysStoppedAnimation<Color>(themeColor),
                     ),
                   )
-                : Text(
+                : const Text(
                     'Save',
                     style: TextStyle(
                       color: themeColor,
@@ -183,7 +183,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         ],
       ),
       body: _isLoading
-          ? Center(child: CircularProgressIndicator(color: themeColor))
+          ? const Center(child: CircularProgressIndicator(color: themeColor))
           : SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Form(
@@ -211,7 +211,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                         ? _usernameController.text[0]
                                             .toUpperCase()
                                         : '?',
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       fontSize: 40,
                                       fontWeight: FontWeight.bold,
                                       color: themeColor,
@@ -226,7 +226,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                               onTap: _pickImage,
                               child: Container(
                                 padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
+                                decoration: const BoxDecoration(
                                   color: themeColor,
                                   shape: BoxShape.circle,
                                 ),

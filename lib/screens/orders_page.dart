@@ -25,9 +25,10 @@ class _OrdersPageState extends State<OrdersPage> {
     });
 
     try {
-      final supabaseService = Provider.of<SupabaseService>(context, listen: false);
+      final supabaseService =
+          Provider.of<SupabaseService>(context, listen: false);
       final orders = await supabaseService.getUserOrders();
-      
+
       setState(() {
         _orders = orders;
       });
@@ -121,7 +122,8 @@ class _OrdersPageState extends State<OrdersPage> {
 
   Widget _buildOrderCard(Map<String, dynamic> order) {
     final orderDate = DateTime.parse(order['created_at']);
-    final formattedDate = '${orderDate.day}/${orderDate.month}/${orderDate.year}';
+    final formattedDate =
+        '${orderDate.day}/${orderDate.month}/${orderDate.year}';
     final orderStatus = order['status'] ?? 'Processing';
     final orderItems = List<Map<String, dynamic>>.from(order['items'] ?? []);
     final totalAmount = order['total_amount'] ?? 0.0;
@@ -152,7 +154,7 @@ class _OrdersPageState extends State<OrdersPage> {
               ],
             ),
             const Divider(height: 24),
-            
+
             // Order date
             Row(
               children: [
@@ -168,12 +170,12 @@ class _OrdersPageState extends State<OrdersPage> {
               ],
             ),
             const SizedBox(height: 8),
-            
+
             // Order items
             ...orderItems.map((item) => _buildOrderItem(item)).toList(),
-            
+
             const Divider(height: 24),
-            
+
             // Order total
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -186,7 +188,7 @@ class _OrdersPageState extends State<OrdersPage> {
                   ),
                 ),
                 Text(
-                  '\$${totalAmount.toStringAsFixed(2)}',
+                  'EGP ${totalAmount.toStringAsFixed(2)}',
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
@@ -195,9 +197,9 @@ class _OrdersPageState extends State<OrdersPage> {
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Action buttons
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
@@ -207,7 +209,8 @@ class _OrdersPageState extends State<OrdersPage> {
                     _showOrderDetails(order);
                   },
                   style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Color.fromARGB(255, 40, 108, 100)),
+                    side: const BorderSide(
+                        color: Color.fromARGB(255, 40, 108, 100)),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
                     ),
@@ -242,7 +245,7 @@ class _OrdersPageState extends State<OrdersPage> {
   Widget _buildStatusChip(String status) {
     Color chipColor;
     Color textColor = Colors.white;
-    
+
     switch (status.toLowerCase()) {
       case 'processing':
         chipColor = Colors.blue;
@@ -259,7 +262,7 @@ class _OrdersPageState extends State<OrdersPage> {
       default:
         chipColor = Colors.grey;
     }
-    
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
@@ -282,10 +285,10 @@ class _OrdersPageState extends State<OrdersPage> {
     final quantity = item['quantity'] ?? 1;
     final price = item['price'] ?? 0.0;
     final imageUrl = item['image_url'];
-    
+
     // Determine if this is a bird product to show the correct icon
     final bool isBirdProduct = productName.toLowerCase().contains('bird');
-    
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
@@ -305,7 +308,9 @@ class _OrdersPageState extends State<OrdersPage> {
                         return Container(
                           color: Colors.grey[200],
                           child: Icon(
-                            isBirdProduct ? Icons.pets : Icons.image_not_supported_outlined,
+                            isBirdProduct
+                                ? Icons.pets
+                                : Icons.image_not_supported_outlined,
                             color: Colors.grey,
                           ),
                         );
@@ -314,14 +319,16 @@ class _OrdersPageState extends State<OrdersPage> {
                   : Container(
                       color: Colors.grey[200],
                       child: Icon(
-                        isBirdProduct ? Icons.pets : Icons.image_not_supported_outlined,
+                        isBirdProduct
+                            ? Icons.pets
+                            : Icons.image_not_supported_outlined,
                         color: Colors.grey,
                       ),
                     ),
             ),
           ),
           const SizedBox(width: 12),
-          
+
           // Product details
           Expanded(
             child: Column(
@@ -338,7 +345,7 @@ class _OrdersPageState extends State<OrdersPage> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '$quantity x \$${price.toStringAsFixed(2)}',
+                  '$quantity x EGP ${price.toStringAsFixed(2)}',
                   style: TextStyle(
                     color: Colors.grey[600],
                     fontSize: 12,
@@ -347,10 +354,10 @@ class _OrdersPageState extends State<OrdersPage> {
               ],
             ),
           ),
-          
+
           // Item total
           Text(
-            '\$${(quantity * price).toStringAsFixed(2)}',
+            'EGP ${(quantity * price).toStringAsFixed(2)}',
             style: const TextStyle(
               fontWeight: FontWeight.w500,
               fontSize: 14,
@@ -363,13 +370,14 @@ class _OrdersPageState extends State<OrdersPage> {
 
   void _showOrderDetails(Map<String, dynamic> order) {
     final orderDate = DateTime.parse(order['created_at']);
-    final formattedDate = '${orderDate.day}/${orderDate.month}/${orderDate.year}';
+    final formattedDate =
+        '${orderDate.day}/${orderDate.month}/${orderDate.year}';
     final orderStatus = order['status'] ?? 'Processing';
     final orderItems = List<Map<String, dynamic>>.from(order['items'] ?? []);
     final totalAmount = order['total_amount'] ?? 0.0;
     final shippingAddress = order['shipping_address'] ?? 'No address provided';
     final paymentMethod = order['payment_method'] ?? 'Credit Card';
-    
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -404,7 +412,7 @@ class _OrdersPageState extends State<OrdersPage> {
                 ],
               ),
               const Divider(),
-              
+
               // Order details
               Expanded(
                 child: SingleChildScrollView(
@@ -426,7 +434,7 @@ class _OrdersPageState extends State<OrdersPage> {
                         ],
                       ),
                       const SizedBox(height: 20),
-                      
+
                       // Shipping address
                       const Text(
                         'Shipping Address',
@@ -444,7 +452,7 @@ class _OrdersPageState extends State<OrdersPage> {
                         ),
                       ),
                       const SizedBox(height: 20),
-                      
+
                       // Payment method
                       const Text(
                         'Payment Method',
@@ -462,7 +470,7 @@ class _OrdersPageState extends State<OrdersPage> {
                         ),
                       ),
                       const SizedBox(height: 20),
-                      
+
                       // Order items
                       const Text(
                         'Order Items',
@@ -472,15 +480,17 @@ class _OrdersPageState extends State<OrdersPage> {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      ...orderItems.map((item) => _buildOrderItem(item)).toList(),
+                      ...orderItems
+                          .map((item) => _buildOrderItem(item))
+                          .toList(),
                       const Divider(),
-                      
+
                       // Order summary
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           const Text('Subtotal'),
-                          Text('\$${(totalAmount * 0.9).toStringAsFixed(2)}'),
+                          Text('EGP ${(totalAmount * 0.9).toStringAsFixed(2)}'),
                         ],
                       ),
                       const SizedBox(height: 8),
@@ -488,7 +498,7 @@ class _OrdersPageState extends State<OrdersPage> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           const Text('Shipping'),
-                          Text('\$${(totalAmount * 0.1).toStringAsFixed(2)}'),
+                          Text('EGP ${(totalAmount * 0.1).toStringAsFixed(2)}'),
                         ],
                       ),
                       const SizedBox(height: 8),
@@ -503,7 +513,7 @@ class _OrdersPageState extends State<OrdersPage> {
                             ),
                           ),
                           Text(
-                            '\$${totalAmount.toStringAsFixed(2)}',
+                            'EGP ${totalAmount.toStringAsFixed(2)}',
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
@@ -516,7 +526,7 @@ class _OrdersPageState extends State<OrdersPage> {
                   ),
                 ),
               ),
-              
+
               // Action buttons
               if (orderStatus == 'Processing')
                 Padding(
@@ -549,7 +559,7 @@ class _OrdersPageState extends State<OrdersPage> {
   void _showReviewDialog() {
     final TextEditingController reviewController = TextEditingController();
     double rating = 5.0;
-    
+
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
@@ -578,7 +588,7 @@ class _OrdersPageState extends State<OrdersPage> {
                   }),
                 ),
                 const SizedBox(height: 16),
-                
+
                 // Review text
                 TextField(
                   controller: reviewController,
@@ -599,7 +609,8 @@ class _OrdersPageState extends State<OrdersPage> {
                 onPressed: () {
                   // Submit review logic would go here
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Review submitted successfully')),
+                    const SnackBar(
+                        content: Text('Review submitted successfully')),
                   );
                   Navigator.pop(context);
                 },

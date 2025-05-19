@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../services/supabase_service.dart';
-import 'order_tracking_page.dart';
 
 class OrderHistoryPage extends StatefulWidget {
   const OrderHistoryPage({Key? key}) : super(key: key);
@@ -164,7 +163,12 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
   Widget _buildOrderCard(Map<String, dynamic> order) {
     final dateFormat = DateFormat('MMM dd, yyyy');
     final orderDate = DateTime.parse(order['created_at']);
-    final items = List<Map<String, dynamic>>.from(order['items']);
+
+    // Handle the case where items might be null
+    final items = order['items'] != null
+        ? List<Map<String, dynamic>>.from(order['items'])
+        : <Map<String, dynamic>>[];
+
     final totalItems =
         items.fold<int>(0, (sum, item) => sum + (item['quantity'] as int));
 
@@ -254,7 +258,7 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '$totalItems ${totalItems == 1 ? 'item' : 'items'} • \$${order['total_amount'].toStringAsFixed(2)}',
+                  '$totalItems ${totalItems == 1 ? 'item' : 'items'} • EGP ${order['total_amount'].toStringAsFixed(2)}',
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                   ),
@@ -273,10 +277,17 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
                         height: 70,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(8),
-                          image: DecorationImage(
-                            image: NetworkImage(item['image_url']),
-                            fit: BoxFit.cover,
-                          ),
+                          image: item['image_url'] != null &&
+                                  item['image_url'].toString().isNotEmpty
+                              ? DecorationImage(
+                                  image: NetworkImage(item['image_url']),
+                                  fit: BoxFit.cover,
+                                )
+                              : null,
+                          color: item['image_url'] == null ||
+                                  item['image_url'].toString().isEmpty
+                              ? Colors.grey[300]
+                              : null,
                         ),
                         child: Container(
                           decoration: BoxDecoration(
@@ -285,7 +296,7 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
                           ),
                           alignment: Alignment.center,
                           child: Text(
-                            'x${item['quantity']}',
+                            'x${item['quantity'] ?? 1}',
                             style: const TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
@@ -320,32 +331,6 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
                     child: const Text('Details'),
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      // Navigate to tracking page
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => OrderTrackingPage(
-                            orderId: order['id'],
-                            orderData: order,
-                          ),
-                        ),
-                      );
-                    },
-                    icon: const Icon(Icons.location_on, size: 16),
-                    label: const Text('Track'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color.fromARGB(255, 40, 108, 100),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                  ),
-                ),
               ],
             ),
           ),
@@ -357,7 +342,20 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
   void _showOrderDetails(Map<String, dynamic> order) {
     final dateFormat = DateFormat('MMM dd, yyyy hh:mm a');
     final orderDate = DateTime.parse(order['created_at']);
-    final items = List<Map<String, dynamic>>.from(order['items']);
+
+    // Handle the case where items might be null
+    final items = order['items'] != null
+        ? List<Map<String, dynamic>>.from(order['items'])
+        : <Map<String, dynamic>>[];
+
+    // Format shipping address from JSON object to readable string
+    final shippingAddress = order['shipping_address'] is Map
+        ? _formatShippingAddress(
+            order['shipping_address'] as Map<String, dynamic>)
+        : 'No address provided';
+
+    // Ensure payment_method is displayed correctly
+    final paymentMethod = order['payment_method']?.toString() ?? 'Unknown';
 
     showModalBottomSheet(
       context: context,
@@ -398,11 +396,10 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
                     const SizedBox(height: 20),
                     _buildDetailRow('Order ID', order['id']),
                     _buildDetailRow('Date', dateFormat.format(orderDate)),
-                    _buildDetailRow('Status', order['status']),
-                    _buildDetailRow('Payment Method', order['payment_method']),
+                    _buildDetailRow('Status', order['status'] ?? 'Processing'),
+                    _buildDetailRow('Payment Method', paymentMethod),
                     const Divider(height: 32),
-                    _buildDetailRow(
-                        'Shipping Address', order['shipping_address']),
+                    _buildDetailRow('Shipping Address', shippingAddress),
                     const SizedBox(height: 24),
                     const Text(
                       'Items',
@@ -427,7 +424,7 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
                           ),
                         ),
                         Text(
-                          '\$${order['total_amount'].toStringAsFixed(2)}',
+                          'EGP ${(order['total_amount'] ?? 0.0).toStringAsFixed(2)}',
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -435,34 +432,6 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
                           ),
                         ),
                       ],
-                    ),
-                    const SizedBox(height: 24),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          Navigator.pop(context);
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => OrderTrackingPage(
-                                orderId: order['id'],
-                                orderData: order,
-                              ),
-                            ),
-                          );
-                        },
-                        icon: const Icon(Icons.location_on),
-                        label: const Text('Track Order'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              const Color.fromARGB(255, 40, 108, 100),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
                     ),
                   ],
                 ),
@@ -505,6 +474,13 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
   }
 
   Widget _buildOrderItemDetail(Map<String, dynamic> item) {
+    // Extract values with null safety
+    final name = item['name']?.toString() ?? 'Unknown Product';
+    final quantity = (item['quantity'] ?? 1) as int;
+    final price = (item['price'] ?? 0.0) as double;
+    final imageUrl = item['image_url']?.toString() ?? '';
+    final totalPrice = price * quantity;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 16.0),
       child: Row(
@@ -514,11 +490,17 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
             height: 60,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(8),
-              image: DecorationImage(
-                image: NetworkImage(item['image_url']),
-                fit: BoxFit.cover,
-              ),
+              image: imageUrl.isNotEmpty
+                  ? DecorationImage(
+                      image: NetworkImage(imageUrl),
+                      fit: BoxFit.cover,
+                    )
+                  : null,
+              color: imageUrl.isEmpty ? Colors.grey[300] : null,
             ),
+            child: imageUrl.isEmpty
+                ? const Icon(Icons.image_not_supported, color: Colors.grey)
+                : null,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -526,7 +508,7 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  item['name'],
+                  name,
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                   ),
@@ -534,7 +516,7 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
-                  '${item['quantity']} x \$${item['price'].toStringAsFixed(2)}',
+                  '$quantity x EGP ${price.toStringAsFixed(2)}',
                   style: TextStyle(
                     color: Colors.grey[600],
                     fontSize: 14,
@@ -544,7 +526,7 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
             ),
           ),
           Text(
-            '\$${(item['price'] * item['quantity']).toStringAsFixed(2)}',
+            'EGP ${totalPrice.toStringAsFixed(2)}',
             style: const TextStyle(
               fontWeight: FontWeight.bold,
             ),
@@ -552,5 +534,44 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
         ],
       ),
     );
+  }
+
+  String _formatShippingAddress(Map<String, dynamic> address) {
+    // Build the formatted address string based on the available fields
+    String formatted = '';
+
+    if (address.containsKey('name') &&
+        address['name'] != null &&
+        address['name'].toString().isNotEmpty) {
+      formatted += '${address['name']}\n';
+    }
+
+    if (address.containsKey('address') &&
+        address['address'] != null &&
+        address['address'].toString().isNotEmpty) {
+      formatted += '${address['address']}\n';
+    }
+
+    if (address.containsKey('city') &&
+        address['city'] != null &&
+        address['city'].toString().isNotEmpty) {
+      formatted += '${address['city']}';
+
+      if (address.containsKey('state') &&
+          address['state'] != null &&
+          address['state'].toString().isNotEmpty) {
+        formatted += ', ${address['state']}';
+      }
+
+      formatted += '\n';
+    }
+
+    if (address.containsKey('phone') &&
+        address['phone'] != null &&
+        address['phone'].toString().isNotEmpty) {
+      formatted += 'Phone: ${address['phone']}';
+    }
+
+    return formatted.trim();
   }
 }

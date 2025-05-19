@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../providers/cart_provider.dart';
 import '../models/cart_item.dart';
 
@@ -17,7 +16,7 @@ class CartItemCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cartProvider = Provider.of<CartProvider>(context, listen: false);
-    
+
     return Dismissible(
       key: ValueKey(cartItem.id),
       background: Container(
@@ -33,7 +32,8 @@ class CartItemCard extends StatelessWidget {
       ),
       direction: DismissDirection.endToStart,
       onDismissed: (direction) {
-        Provider.of<CartProvider>(context, listen: false).removeFromCart(productId);
+        Provider.of<CartProvider>(context, listen: false)
+            .removeFromCart(productId);
       },
       child: Card(
         margin: const EdgeInsets.symmetric(vertical: 8),
@@ -89,7 +89,8 @@ class CartItemCard extends StatelessWidget {
                   },
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     border: Border.all(color: Colors.grey.shade300),
                     borderRadius: BorderRadius.circular(4),
@@ -112,4 +113,4 @@ class CartItemCard extends StatelessWidget {
       ),
     );
   }
-} 
+}

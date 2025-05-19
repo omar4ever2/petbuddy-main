@@ -3,7 +3,10 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../services/supabase_service.dart';
 import '../models/vaccine_appointment.dart';
+import '../providers/theme_provider.dart';
+import '../utils/theme_utils.dart';
 import '../widgets/vaccine_appointment_card.dart';
+import '../screens/my_appointments_page.dart';
 
 class VaccineBookingPage extends StatefulWidget {
   const VaccineBookingPage({Key? key}) : super(key: key);
@@ -12,18 +15,23 @@ class VaccineBookingPage extends StatefulWidget {
   State<VaccineBookingPage> createState() => _VaccineBookingPageState();
 }
 
-class _VaccineBookingPageState extends State<VaccineBookingPage> {
+class _VaccineBookingPageState extends State<VaccineBookingPage>
+    with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
   bool _isLoadingAppointments = true;
   List<Map<String, dynamic>> _vaccineTypes = [];
   List<Map<String, dynamic>> _upcomingAppointments = [];
+  List<Map<String, dynamic>> _filteredVaccineTypes = [];
   bool _showOnlyUpcoming = true;
+  String? _errorMessage;
+  late TabController _tabController;
+  final Color themeColor = const Color.fromARGB(255, 40, 108, 100);
 
   // Form fields
   final _petNameController = TextEditingController();
   String _petType = 'Dog';
-  String _vaccineType = '';
+  String? _vaccineType;
   DateTime _selectedDate = DateTime.now().add(const Duration(days: 1));
   TimeOfDay _selectedTime = const TimeOfDay(hour: 10, minute: 0);
   final _notesController = TextEditingController();
@@ -40,6 +48,7 @@ class _VaccineBookingPageState extends State<VaccineBookingPage> {
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
     _loadData();
   }
 
@@ -47,13 +56,45 @@ class _VaccineBookingPageState extends State<VaccineBookingPage> {
   void dispose() {
     _petNameController.dispose();
     _notesController.dispose();
+    _tabController.dispose();
     super.dispose();
+  }
+
+  // Filter vaccine types based on selected pet type
+  void _filterVaccineTypes() {
+    if (_vaccineTypes.isEmpty) return;
+
+    setState(() {
+      _filteredVaccineTypes = _vaccineTypes.where((vaccine) {
+        // Include if pet_type is null (meaning it's for all pets)
+        // or if it matches the selected pet type
+        return vaccine['pet_type'] == null || vaccine['pet_type'] == _petType;
+      }).toList();
+
+      // Reset vaccine type if it's not in the filtered list
+      if (_filteredVaccineTypes.isEmpty) {
+        _vaccineType = null;
+      } else {
+        // Check if current vaccine type exists in filtered list
+        bool vaccineTypeExists = false;
+        if (_vaccineType != null) {
+          vaccineTypeExists = _filteredVaccineTypes
+              .any((vaccine) => vaccine['name'] == _vaccineType);
+        }
+
+        // If current vaccine type doesn't exist in filtered list, set to first one
+        if (!vaccineTypeExists) {
+          _vaccineType = _filteredVaccineTypes[0]['name'];
+        }
+      }
+    });
   }
 
   Future<void> _loadData() async {
     setState(() {
       _isLoading = true;
       _isLoadingAppointments = true;
+      _errorMessage = null;
     });
 
     try {
@@ -69,9 +110,9 @@ class _VaccineBookingPageState extends State<VaccineBookingPage> {
 
       setState(() {
         _vaccineTypes = vaccineTypes;
-        if (vaccineTypes.isNotEmpty) {
-          _vaccineType = vaccineTypes[0]['name'];
-        }
+
+        // Filter vaccine types based on pet type
+        _filterVaccineTypes();
 
         _upcomingAppointments = upcomingAppointments;
         _isLoading = false;
@@ -82,6 +123,7 @@ class _VaccineBookingPageState extends State<VaccineBookingPage> {
       setState(() {
         _isLoading = false;
         _isLoadingAppointments = false;
+        _errorMessage = 'Failed to load data: $e';
       });
 
       if (mounted) {
@@ -101,8 +143,8 @@ class _VaccineBookingPageState extends State<VaccineBookingPage> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Color.fromARGB(255, 40, 108, 100),
+            colorScheme: ColorScheme.light(
+              primary: themeColor,
             ),
           ),
           child: child!,
@@ -124,8 +166,8 @@ class _VaccineBookingPageState extends State<VaccineBookingPage> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Color.fromARGB(255, 40, 108, 100),
+            colorScheme: ColorScheme.light(
+              primary: themeColor,
             ),
           ),
           child: child!,
@@ -162,6 +204,11 @@ class _VaccineBookingPageState extends State<VaccineBookingPage> {
         _selectedTime.minute,
       );
 
+      // Make sure we have a selected vaccine type
+      if (_vaccineType == null) {
+        throw Exception('Please select a vaccine type');
+      }
+
       final appointmentData = {
         'pet_name': _petNameController.text,
         'pet_type': _petType,
@@ -183,15 +230,45 @@ class _VaccineBookingPageState extends State<VaccineBookingPage> {
       _notesController.clear();
       setState(() {
         _petType = 'Dog';
+        _filterVaccineTypes(); // Re-filter vaccine types
         _selectedDate = DateTime.now().add(const Duration(days: 1));
         _selectedTime = const TimeOfDay(hour: 10, minute: 0);
       });
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Appointment booked successfully!'),
-            backgroundColor: Colors.green,
+        // Show a success dialog with option to view appointments
+        showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Appointment Booked!'),
+            content: const Text(
+              'Your pet vaccination appointment has been successfully scheduled.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                  // Switch to Appointments tab after successful booking
+                  _tabController.animateTo(0);
+                },
+                child: const Text('OK'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const MyAppointmentsPage(),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: ThemeUtils.themeColor,
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('View All Appointments'),
+              ),
+            ],
           ),
         );
       }
@@ -214,6 +291,36 @@ class _VaccineBookingPageState extends State<VaccineBookingPage> {
   }
 
   Future<void> _cancelAppointment(String appointmentId) async {
+    // Show confirmation dialog
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Cancel Appointment'),
+          content:
+              const Text('Are you sure you want to cancel this appointment?'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('No'),
+              onPressed: () {
+                Navigator.of(context).pop(false);
+              },
+            ),
+            TextButton(
+              child: const Text('Yes'),
+              onPressed: () {
+                Navigator.of(context).pop(true);
+              },
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true) {
+      return;
+    }
+
     setState(() {
       _isLoading = true;
     });
@@ -261,34 +368,235 @@ class _VaccineBookingPageState extends State<VaccineBookingPage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDarkMode = themeProvider.isDarkMode;
+
     return Scaffold(
+      backgroundColor: ThemeUtils.backgroundColor(isDarkMode),
       appBar: AppBar(
-        title: const Text('Vaccine Appointments'),
-        backgroundColor: Colors.transparent,
+        title: const Text('Pet Vaccination',
+            style: TextStyle(fontWeight: FontWeight.bold)),
+        actions: [
+          // Add a button to view all appointments
+          IconButton(
+            icon: const Icon(Icons.calendar_month),
+            tooltip: 'My Appointments',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const MyAppointmentsPage(),
+                ),
+              );
+            },
+          ),
+        ],
+        backgroundColor: themeColor,
         elevation: 0,
+        foregroundColor: Colors.white,
+        bottom: TabBar(
+          controller: _tabController,
+          indicatorColor: Colors.white,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white.withOpacity(0.7),
+          tabs: const [
+            Tab(
+              text: 'My Appointments',
+              icon: Icon(Icons.calendar_today, color: Colors.white),
+            ),
+            Tab(
+              text: 'Book New',
+              icon: Icon(Icons.add_circle_outline, color: Colors.white),
+            ),
+          ],
+        ),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
+      body: _isLoading && _errorMessage == null
+          ? Center(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  _buildBookingForm(),
-                  const SizedBox(height: 24),
-                  _buildUpcomingAppointments(),
+                  CircularProgressIndicator(color: themeColor),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Loading...',
+                    style: TextStyle(
+                      color: ThemeUtils.textColor(isDarkMode),
+                    ),
+                  ),
                 ],
               ),
-            ),
+            )
+          : _errorMessage != null
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.error_outline,
+                        size: 64,
+                        color: Colors.red[300],
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Something went wrong',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: ThemeUtils.textColor(isDarkMode),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        _errorMessage!,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: ThemeUtils.secondaryTextColor(isDarkMode),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      ElevatedButton.icon(
+                        onPressed: _loadData,
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Try Again'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: themeColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              : TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildAppointmentsTab(isDarkMode),
+                    _buildBookingTab(isDarkMode),
+                  ],
+                ),
     );
   }
 
-  Widget _buildBookingForm() {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+  Widget _buildAppointmentsTab(bool isDarkMode) {
+    // Filter out cancelled appointments if showing only upcoming
+    final displayedAppointments = _upcomingAppointments
+        .where((appointment) =>
+            !_showOnlyUpcoming || appointment['status'] != 'cancelled')
+        .toList();
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            children: [
+              Text(
+                'Your Appointments',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: ThemeUtils.textColor(isDarkMode),
+                ),
+              ),
+              const Spacer(),
+              Switch(
+                value: _showOnlyUpcoming,
+                onChanged: (value) {
+                  setState(() {
+                    _showOnlyUpcoming = value;
+                  });
+                },
+                activeColor: themeColor,
+              ),
+              Text(
+                'Hide cancelled',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: ThemeUtils.secondaryTextColor(isDarkMode),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: _isLoadingAppointments
+              ? Center(
+                  child: CircularProgressIndicator(color: themeColor),
+                )
+              : displayedAppointments.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.event_busy,
+                            size: 64,
+                            color: isDarkMode
+                                ? Colors.grey[600]
+                                : Colors.grey[400],
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'No upcoming appointments',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              color: ThemeUtils.textColor(isDarkMode),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Book a vaccine appointment for your pet',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: ThemeUtils.secondaryTextColor(isDarkMode),
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              _tabController.animateTo(1);
+                            },
+                            icon: const Icon(Icons.add),
+                            label: const Text('Book Appointment'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: themeColor,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : RefreshIndicator(
+                      onRefresh: _loadData,
+                      color: themeColor,
+                      child: ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        itemCount: displayedAppointments.length,
+                        itemBuilder: (context, index) {
+                          final appointment = displayedAppointments[index];
+                          final vaccineAppointment =
+                              VaccineAppointment.fromJson(appointment);
+                          return VaccineAppointmentCard(
+                            appointment: vaccineAppointment,
+                            onCancel: vaccineAppointment.status == 'pending' ||
+                                    vaccineAppointment.status == 'confirmed'
+                                ? () =>
+                                    _cancelAppointment(vaccineAppointment.id)
+                                : null,
+                          );
+                        },
+                      ),
+                    ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBookingTab(bool isDarkMode) {
+    return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -296,20 +604,28 @@ class _VaccineBookingPageState extends State<VaccineBookingPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'Book a Vaccine Appointment',
                 style: TextStyle(
-                  fontSize: 18,
+                  fontSize: 20,
                   fontWeight: FontWeight.bold,
+                  color: ThemeUtils.textColor(isDarkMode),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
+
+              // Pet Name
               TextFormField(
                 controller: _petNameController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Pet Name',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.pets),
+                  hintText: 'Enter your pet\'s name',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  prefixIcon: const Icon(Icons.pets),
+                  filled: true,
+                  fillColor: ThemeUtils.inputBackgroundColor(isDarkMode),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -319,12 +635,18 @@ class _VaccineBookingPageState extends State<VaccineBookingPage> {
                 },
               ),
               const SizedBox(height: 16),
+
+              // Pet Type
               DropdownButtonFormField<String>(
                 value: _petType,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Pet Type',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.category),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  prefixIcon: const Icon(Icons.category),
+                  filled: true,
+                  fillColor: ThemeUtils.inputBackgroundColor(isDarkMode),
                 ),
                 items: _petTypes.map((type) {
                   return DropdownMenuItem<String>(
@@ -333,54 +655,95 @@ class _VaccineBookingPageState extends State<VaccineBookingPage> {
                   );
                 }).toList(),
                 onChanged: (value) {
-                  setState(() {
-                    _petType = value!;
-                  });
-                },
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please select a pet type';
+                  if (value != null) {
+                    setState(() {
+                      _petType = value;
+                      // Refilter vaccine types when pet type changes
+                      _filterVaccineTypes();
+                    });
                   }
-                  return null;
                 },
               ),
               const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                value: _vaccineTypes.isNotEmpty ? _vaccineType : null,
-                decoration: const InputDecoration(
-                  labelText: 'Vaccine Type',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.vaccines),
-                ),
-                items: _vaccineTypes.map((type) {
-                  return DropdownMenuItem<String>(
-                    value: type['name'],
-                    child: Text(type['name']),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _vaccineType = value!;
-                  });
-                },
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please select a vaccine type';
-                  }
-                  return null;
-                },
-              ),
+
+              // Vaccine Type
+              _filteredVaccineTypes.isEmpty
+                  ? Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: ThemeUtils.cardColor(isDarkMode),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.amber,
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.info_outline,
+                            color: Colors.amber[700],
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'No vaccine types available for $_petType. Please choose a different pet type.',
+                              style: TextStyle(
+                                color: ThemeUtils.textColor(isDarkMode),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : DropdownButtonFormField<String>(
+                      value:
+                          _filteredVaccineTypes.isEmpty ? null : _vaccineType,
+                      decoration: InputDecoration(
+                        labelText: 'Vaccine Type',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        prefixIcon: const Icon(Icons.medical_services),
+                        filled: true,
+                        fillColor: ThemeUtils.inputBackgroundColor(isDarkMode),
+                      ),
+                      items: _filteredVaccineTypes.map((type) {
+                        return DropdownMenuItem<String>(
+                          value: type['name'],
+                          child: Text(type['name']),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          _vaccineType = value;
+                        });
+                      },
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please select a vaccine type';
+                        }
+                        return null;
+                      },
+                    ),
               const SizedBox(height: 16),
+
+              // Date and Time
               Row(
                 children: [
                   Expanded(
                     child: InkWell(
                       onTap: () => _selectDate(context),
                       child: InputDecorator(
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'Date',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.calendar_today),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          prefixIcon: const Icon(Icons.calendar_today),
+                          filled: true,
+                          fillColor:
+                              ThemeUtils.inputBackgroundColor(isDarkMode),
                         ),
                         child: Text(
                           DateFormat('MMM dd, yyyy').format(_selectedDate),
@@ -393,10 +756,15 @@ class _VaccineBookingPageState extends State<VaccineBookingPage> {
                     child: InkWell(
                       onTap: () => _selectTime(context),
                       child: InputDecorator(
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'Time',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.access_time),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          prefixIcon: const Icon(Icons.access_time),
+                          filled: true,
+                          fillColor:
+                              ThemeUtils.inputBackgroundColor(isDarkMode),
                         ),
                         child: Text(
                           _selectedTime.format(context),
@@ -407,135 +775,61 @@ class _VaccineBookingPageState extends State<VaccineBookingPage> {
                 ],
               ),
               const SizedBox(height: 16),
+
+              // Notes
               TextFormField(
                 controller: _notesController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Notes (Optional)',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.note),
+                  hintText: 'Any special instructions or concerns',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  prefixIcon: const Icon(Icons.note),
+                  filled: true,
+                  fillColor: ThemeUtils.inputBackgroundColor(isDarkMode),
                 ),
                 maxLines: 3,
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 32),
+
+              // Book button
               SizedBox(
                 width: double.infinity,
+                height: 50,
                 child: ElevatedButton(
-                  onPressed: _isLoading ? null : _bookAppointment,
+                  onPressed: _isLoading || _filteredVaccineTypes.isEmpty
+                      ? null
+                      : _bookAppointment,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color.fromARGB(255, 40, 108, 100),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    backgroundColor: themeColor,
+                    foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text(
-                    'Book Appointment',
-                    style: TextStyle(
-                        fontSize: 16,
-                        color: Color.fromARGB(255, 250, 250, 250)),
-                  ),
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 3,
+                          ),
+                        )
+                      : const Text(
+                          'Book Appointment',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                 ),
               ),
             ],
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildUpcomingAppointments() {
-    // Filter appointments based on the toggle
-    final filteredAppointments = _showOnlyUpcoming
-        ? _upcomingAppointments.where((appointment) {
-            final appointmentDate =
-                DateTime.parse(appointment['appointment_date']);
-            return appointmentDate.isAfter(DateTime.now());
-          }).toList()
-        : _upcomingAppointments;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text(
-              'Appointments',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            Row(
-              children: [
-                const Text('Show all'),
-                Switch(
-                  value: _showOnlyUpcoming,
-                  onChanged: (value) {
-                    setState(() {
-                      _showOnlyUpcoming = value;
-                    });
-                  },
-                  activeColor: const Color.fromARGB(255, 40, 108, 100),
-                ),
-                const Text('Upcoming only'),
-              ],
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        _isLoadingAppointments
-            ? const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(20.0),
-                  child: CircularProgressIndicator(),
-                ),
-              )
-            : filteredAppointments.isEmpty
-                ? Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(20.0),
-                      child: Column(
-                        children: [
-                          Icon(
-                            Icons.calendar_today,
-                            size: 48,
-                            color: Colors.grey[400],
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            _showOnlyUpcoming
-                                ? 'No upcoming appointments'
-                                : 'No appointments found',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  )
-                : ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: filteredAppointments.length,
-                    itemBuilder: (context, index) {
-                      final appointment = VaccineAppointment.fromJson(
-                        filteredAppointments[index],
-                      );
-
-                      return VaccineAppointmentCard(
-                        appointment: appointment,
-                        onCancel: appointment.status.toLowerCase() ==
-                                    'pending' ||
-                                appointment.status.toLowerCase() == 'confirmed'
-                            ? () => _cancelAppointment(appointment.id)
-                            : null,
-                      );
-                    },
-                  ),
-      ],
     );
   }
 }

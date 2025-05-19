@@ -55,7 +55,7 @@ class AdoptablePet {
       isNeutered: json['is_neutered'] ?? false,
       isHouseTrained: json['is_house_trained'] ?? false,
       isFeatured: json['is_featured'] ?? false,
-      adoptionFee: json['adoption_fee'] != null ? (json['adoption_fee'] as num).toDouble() : null,
+      adoptionFee: null,
       contactEmail: json['contact_email'],
       contactPhone: json['contact_phone'],
       location: json['location'],
@@ -64,15 +64,15 @@ class AdoptablePet {
 
   String get ageText {
     if (ageYears == null && ageMonths == null) return 'Unknown age';
-    
-    final years = ageYears != null && ageYears! > 0 
-        ? '$ageYears ${ageYears == 1 ? 'year' : 'years'}' 
+
+    final years = ageYears != null && ageYears! > 0
+        ? '$ageYears ${ageYears == 1 ? 'year' : 'years'}'
         : '';
-    
-    final months = ageMonths != null && ageMonths! > 0 
-        ? '$ageMonths ${ageMonths == 1 ? 'month' : 'months'}' 
+
+    final months = ageMonths != null && ageMonths! > 0
+        ? '$ageMonths ${ageMonths == 1 ? 'month' : 'months'}'
         : '';
-    
+
     if (years.isNotEmpty && months.isNotEmpty) {
       return '$years, $months';
     } else if (years.isNotEmpty) {
@@ -81,4 +81,4 @@ class AdoptablePet {
       return months;
     }
   }
-} 
+}

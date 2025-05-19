@@ -17,10 +17,10 @@ class VaccineAppointmentCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final dateFormat = DateFormat('MMM dd, yyyy');
     final timeFormat = DateFormat('h:mm a');
-    
+
     Color statusColor;
     IconData statusIcon;
-    
+
     switch (appointment.status.toLowerCase()) {
       case 'confirmed':
         statusColor = Colors.green;
@@ -59,10 +59,11 @@ class VaccineAppointmentCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: const Color.fromARGB(255, 40, 108, 100).withOpacity(0.1),
+                    color: const Color.fromARGB(255, 40, 108, 100)
+                        .withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: FaIcon(
+                  child: const FaIcon(
                     FontAwesomeIcons.syringe,
                     color: Color.fromARGB(255, 40, 108, 100),
                     size: 24,
@@ -92,7 +93,8 @@ class VaccineAppointmentCard extends StatelessWidget {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: statusColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
@@ -171,7 +173,7 @@ class VaccineAppointmentCard extends StatelessWidget {
                 ),
               ),
             ],
-            if (appointment.status.toLowerCase() == 'pending' || 
+            if (appointment.status.toLowerCase() == 'pending' ||
                 appointment.status.toLowerCase() == 'confirmed') ...[
               const SizedBox(height: 16),
               Row(
@@ -192,4 +194,4 @@ class VaccineAppointmentCard extends StatelessWidget {
       ),
     );
   }
-} 
+}

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/adoptable_pet.dart';
-import '../screens/pet_details_page.dart';
+import '../screens/adoptable_pet_details_page.dart';
 import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
 import '../utils/theme_utils.dart';
@@ -18,7 +18,7 @@ class AdoptablePetCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDarkMode = themeProvider.isDarkMode;
-    
+
     // Get a color based on species for visual distinction
     Color speciesColor = Colors.teal;
     if (pet.species.toLowerCase() == 'dog') {
@@ -44,7 +44,7 @@ class AdoptablePetCard extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => PetDetailsPage(petId: pet.id),
+            builder: (context) => AdoptablePetDetailsPage(petId: pet.id),
           ),
         );
       },
@@ -56,8 +56,8 @@ class AdoptablePetCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: isDarkMode 
-                  ? Colors.black.withOpacity(0.2) 
+              color: isDarkMode
+                  ? Colors.black.withOpacity(0.2)
                   : Colors.grey.withOpacity(0.1),
               spreadRadius: 1,
               blurRadius: 4,
@@ -87,28 +87,35 @@ class AdoptablePetCard extends StatelessWidget {
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) {
                               return Container(
-                                color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+                                color: isDarkMode
+                                    ? Colors.grey[800]
+                                    : Colors.grey[200],
                                 child: Center(
                                   child: Icon(
                                     Icons.error_outline,
-                                    color: isDarkMode ? Colors.grey[600] : Colors.grey,
+                                    color: isDarkMode
+                                        ? Colors.grey[600]
+                                        : Colors.grey,
                                   ),
                                 ),
                               );
                             },
                           )
                         : Container(
-                            color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+                            color: isDarkMode
+                                ? Colors.grey[800]
+                                : Colors.grey[200],
                             child: Center(
                               child: Icon(
                                 Icons.pets,
-                                color: isDarkMode ? Colors.grey[600] : Colors.grey,
+                                color:
+                                    isDarkMode ? Colors.grey[600] : Colors.grey,
                               ),
                             ),
                           ),
                   ),
                 ),
-                
+
                 // Gradient overlay
                 Positioned(
                   bottom: 0,
@@ -132,7 +139,7 @@ class AdoptablePetCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                
+
                 // Pet name on gradient
                 Positioned(
                   bottom: 8,
@@ -149,7 +156,7 @@ class AdoptablePetCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                
+
                 // Species badge
                 Positioned(
                   top: 8,
@@ -173,9 +180,33 @@ class AdoptablePetCard extends StatelessWidget {
                     ),
                   ),
                 ),
+
+                // Free Adoption badge
+                Positioned(
+                  top: 8,
+                  left: 8,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withOpacity(0.8),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Text(
+                      'Free',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
-            
+
             // Pet info
             Padding(
               padding: const EdgeInsets.all(8),
@@ -206,9 +237,9 @@ class AdoptablePetCard extends StatelessWidget {
                         ),
                       ],
                     ),
-                  
+
                   const SizedBox(height: 4),
-                  
+
                   Row(
                     children: [
                       const Icon(
@@ -228,9 +259,9 @@ class AdoptablePetCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  
+
                   const SizedBox(height: 8),
-                  
+
                   // Features
                   _buildPetFeatures(isDarkMode),
                 ],
@@ -292,4 +323,4 @@ class AdoptablePetCard extends StatelessWidget {
       ),
     );
   }
-} 
+}

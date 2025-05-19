@@ -19,14 +19,51 @@ class _SignupScreenState extends State<SignupScreen> {
   bool _isLoading = false;
   String? _errorMessage;
 
+  // Password visibility state
+  bool _passwordVisible = false;
+  bool _confirmPasswordVisible = false;
+
+  // Password requirement state variables
+  bool _hasMinLength = false;
+  bool _hasUppercase = false;
+  bool _hasLowercase = false;
+  bool _hasNumber = false;
+  bool _hasSpecialChar = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _passwordController.addListener(_updatePasswordRequirements);
+  }
+
   @override
   void dispose() {
     _usernameController.dispose();
     _emailController.dispose();
+    _passwordController.removeListener(_updatePasswordRequirements);
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
   }
+
+  void _updatePasswordRequirements() {
+    final password = _passwordController.text;
+
+    setState(() {
+      _hasMinLength = password.length >= 8;
+      _hasUppercase = password.contains(RegExp(r'[A-Z]'));
+      _hasLowercase = password.contains(RegExp(r'[a-z]'));
+      _hasNumber = password.contains(RegExp(r'[0-9]'));
+      _hasSpecialChar = password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'));
+    });
+  }
+
+  bool get _isPasswordValid =>
+      _hasMinLength &&
+      _hasUppercase &&
+      _hasLowercase &&
+      _hasNumber &&
+      _hasSpecialChar;
 
   Future<void> _signup() async {
     if (!_formKey.currentState!.validate()) return;
@@ -37,14 +74,15 @@ class _SignupScreenState extends State<SignupScreen> {
     });
 
     try {
-      final supabaseService = Provider.of<SupabaseService>(context, listen: false);
-      
+      final supabaseService =
+          Provider.of<SupabaseService>(context, listen: false);
+
       await supabaseService.signUp(
         email: _emailController.text.trim(),
         password: _passwordController.text,
         username: _usernameController.text.trim(),
       );
-      
+
       if (mounted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => const ProfileSetupPage()),
@@ -61,6 +99,62 @@ class _SignupScreenState extends State<SignupScreen> {
         });
       }
     }
+  }
+
+  Widget _buildPasswordRequirement(bool isMet, String text) {
+    return Row(
+      children: [
+        Icon(
+          isMet ? Icons.check_circle : Icons.circle_outlined,
+          color: isMet ? Colors.green : Colors.grey,
+          size: 16,
+        ),
+        const SizedBox(width: 8),
+        Text(
+          text,
+          style: TextStyle(
+            color: isMet ? Colors.green : Colors.grey,
+            fontSize: 12,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPasswordRequirements() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Password Requirements:',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+            ),
+          ),
+          const SizedBox(height: 8),
+          _buildPasswordRequirement(_hasMinLength, 'At least 8 characters'),
+          const SizedBox(height: 4),
+          _buildPasswordRequirement(
+              _hasUppercase, 'At least one uppercase letter'),
+          const SizedBox(height: 4),
+          _buildPasswordRequirement(
+              _hasLowercase, 'At least one lowercase letter'),
+          const SizedBox(height: 4),
+          _buildPasswordRequirement(_hasNumber, 'At least one number'),
+          const SizedBox(height: 4),
+          _buildPasswordRequirement(_hasSpecialChar,
+              'At least one special character (!@#\$%^&*(),.?":{}|<>)'),
+        ],
+      ),
+    );
   }
 
   @override
@@ -88,10 +182,9 @@ class _SignupScreenState extends State<SignupScreen> {
                   const Text(
                     'Join PetBuddy',
                     style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Color.fromARGB(255, 40, 108, 100)
-                    ),
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Color.fromARGB(255, 40, 108, 100)),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
@@ -157,10 +250,26 @@ class _SignupScreenState extends State<SignupScreen> {
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _passwordController,
-                    obscureText: true,
+                    obscureText: !_passwordVisible,
                     decoration: InputDecoration(
                       labelText: 'Password',
                       prefixIcon: const Icon(Icons.lock),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _passwordVisible
+                              ? Icons.visibility
+                              : Icons.visibility_off,
+                          color: Colors.grey,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _passwordVisible = !_passwordVisible;
+                          });
+                        },
+                        tooltip: _passwordVisible
+                            ? 'Hide password'
+                            : 'Show password',
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -169,19 +278,37 @@ class _SignupScreenState extends State<SignupScreen> {
                       if (value == null || value.isEmpty) {
                         return 'Please enter a password';
                       }
-                      if (value.length < 6) {
-                        return 'Password must be at least 6 characters';
+                      if (!_isPasswordValid) {
+                        return 'Password does not meet all requirements';
                       }
                       return null;
                     },
                   ),
+                  const SizedBox(height: 12),
+                  _buildPasswordRequirements(),
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _confirmPasswordController,
-                    obscureText: true,
+                    obscureText: !_confirmPasswordVisible,
                     decoration: InputDecoration(
                       labelText: 'Confirm Password',
                       prefixIcon: const Icon(Icons.lock_outline),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _confirmPasswordVisible
+                              ? Icons.visibility
+                              : Icons.visibility_off,
+                          color: Colors.grey,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _confirmPasswordVisible = !_confirmPasswordVisible;
+                          });
+                        },
+                        tooltip: _confirmPasswordVisible
+                            ? 'Hide password'
+                            : 'Show password',
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -242,4 +369,4 @@ class _SignupScreenState extends State<SignupScreen> {
       ),
     );
   }
-} 
+}

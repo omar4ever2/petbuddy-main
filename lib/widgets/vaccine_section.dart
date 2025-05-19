@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../services/supabase_service.dart';
-import '../models/vaccine_appointment.dart';
 import '../screens/vaccine_booking_page.dart';
+import '../screens/my_appointments_page.dart';
 
 class VaccineSection extends StatelessWidget {
   const VaccineSection({Key? key}) : super(key: key);
@@ -11,7 +11,7 @@ class VaccineSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const Color themeColor = Color.fromARGB(255, 40, 108, 100);
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -34,7 +34,7 @@ class VaccineSection extends StatelessWidget {
                   ),
                 );
               },
-              icon: Text(
+              icon: const Text(
                 'See All',
                 style: TextStyle(
                   fontSize: 14,
@@ -42,7 +42,7 @@ class VaccineSection extends StatelessWidget {
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              label: Icon(
+              label: const Icon(
                 Icons.arrow_forward_ios,
                 size: 12,
                 color: themeColor,
@@ -145,15 +145,41 @@ class VaccineSection extends StatelessWidget {
                   bottomRight: Radius.circular(16),
                 ),
               ),
-              child: Center(
-                child: Text(
-                  'Book an Appointment',
-                  style: TextStyle(
-                    color: themeColor,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Book an Appointment',
+                    style: TextStyle(
+                      color: themeColor,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
                   ),
+                  const SizedBox(width: 8),
+                  Icon(
+                    Icons.arrow_forward,
+                    size: 16,
+                    color: themeColor,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const MyAppointmentsPage(),
                 ),
+              );
+            },
+            child: const Text(
+              'View My Appointments',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ),
@@ -188,20 +214,36 @@ class VaccineSection extends StatelessWidget {
               color: Colors.white.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Row(
+            child: Row(
               children: [
-                Icon(
+                const Icon(
                   Icons.error_outline,
                   color: Colors.white70,
                 ),
-                SizedBox(width: 12),
+                const SizedBox(width: 12),
                 Expanded(
-                  child: Text(
-                    'Unable to load appointments',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Unable to load appointments',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        snapshot.error.toString(),
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 12,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -238,7 +280,7 @@ class VaccineSection extends StatelessWidget {
           final activeAppointments = snapshot.data!
               .where((appointment) => appointment['status'] != 'cancelled')
               .toList();
-          
+
           if (activeAppointments.isEmpty) {
             return Container(
               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
@@ -255,7 +297,7 @@ class VaccineSection extends StatelessWidget {
                   SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'No active upcoming appointments',
+                      'No active appointments',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 14,
@@ -266,93 +308,144 @@ class VaccineSection extends StatelessWidget {
               ),
             );
           }
-          
-          // Sort by date (closest first)
+
+          // Sort by appointment date
           activeAppointments.sort((a, b) {
             final dateA = DateTime.parse(a['appointment_date']);
             final dateB = DateTime.parse(b['appointment_date']);
             return dateA.compareTo(dateB);
           });
-          
-          final appointment = VaccineAppointment.fromJson(activeAppointments.first);
-          final dateFormat = DateFormat('MMM dd, yyyy');
-          final timeFormat = DateFormat('h:mm a');
-          
-          return Container(
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Next Appointment',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 12,
-                  ),
+
+          // Take the next upcoming appointment
+          final nextAppointment = activeAppointments.first;
+          final appointmentDate =
+              DateTime.parse(nextAppointment['appointment_date']);
+          final formattedDate =
+              DateFormat('MMM dd, yyyy').format(appointmentDate);
+          final formattedTime = DateFormat('h:mm a').format(appointmentDate);
+
+          // Get status color
+          Color statusColor;
+          switch (nextAppointment['status']) {
+            case 'confirmed':
+              statusColor = Colors.green;
+              break;
+            case 'pending':
+              statusColor = Colors.orange;
+              break;
+            default:
+              statusColor = Colors.blue;
+          }
+
+          return GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const VaccineBookingPage(),
                 ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.pets,
-                      color: Colors.white,
-                      size: 16,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        '${appointment.petName} - ${appointment.vaccineType}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
+              );
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: statusColor.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                        overflow: TextOverflow.ellipsis,
+                        child: Icon(
+                          Icons.event,
+                          color: statusColor,
+                          size: 14,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.calendar_today,
-                      color: Colors.white70,
-                      size: 14,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      dateFormat.format(appointment.appointmentDate),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Next appointment - ${nextAppointment['status'].toUpperCase()}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 16),
-                    const Icon(
-                      Icons.access_time,
-                      color: Colors.white70,
-                      size: 14,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      timeFormat.format(appointment.appointmentDate),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
+                      Icon(
+                        Icons.arrow_forward_ios,
+                        color: Colors.white.withOpacity(0.7),
+                        size: 14,
                       ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    nextAppointment['vaccine_type'],
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
                     ),
-                  ],
-                ),
-              ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'For ${nextAppointment['pet_name']} (${nextAppointment['pet_type']})',
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.9),
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.calendar_today,
+                        color: Colors.white.withOpacity(0.7),
+                        size: 12,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        formattedDate,
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.9),
+                          fontSize: 12,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Icon(
+                        Icons.access_time,
+                        color: Colors.white.withOpacity(0.7),
+                        size: 12,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        formattedTime,
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.9),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           );
         }
       },
     );
   }
-} 
+}

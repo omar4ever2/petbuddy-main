@@ -4,7 +4,16 @@ import 'package:flutter/material.dart';
 class ThemeUtils {
   // Common colors
   static const themeColor = Color.fromARGB(255, 40, 108, 100);
-  
+  static const secondaryColor = Color(0xFFFF5722);
+
+  // Animation durations
+  static const animationDuration = Duration(milliseconds: 300);
+  static const animationDurationFast = Duration(milliseconds: 150);
+
+  // Border radius values
+  static const double borderRadiusLarge = 16.0;
+  static const double borderRadiusMedium = 12.0;
+
   /// Get the appropriate background color based on dark mode
   static Color backgroundColor(bool isDarkMode) {
     return isDarkMode ? Colors.grey[900]! : Colors.grey[50]!;
@@ -14,15 +23,20 @@ class ThemeUtils {
   static Color cardColor(bool isDarkMode) {
     return isDarkMode ? Colors.grey[850]! : Colors.white;
   }
-  
+
   /// Get the appropriate text color based on dark mode
   static Color textColor(bool isDarkMode) {
     return isDarkMode ? Colors.white : Colors.black87;
   }
-  
+
   /// Get the appropriate secondary text color based on dark mode
   static Color secondaryTextColor(bool isDarkMode) {
     return isDarkMode ? Colors.grey[400]! : Colors.grey[600]!;
+  }
+
+  /// Get the appropriate background color for input fields based on dark mode
+  static Color inputBackgroundColor(bool isDarkMode) {
+    return isDarkMode ? Colors.grey[800]! : Colors.grey[100]!;
   }
 
   /// Get input decoration for form fields with dark mode support
@@ -56,7 +70,7 @@ class ThemeUtils {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: borderRadius,
-        borderSide: BorderSide(
+        borderSide: const BorderSide(
           color: themeColor,
         ),
       ),
@@ -91,8 +105,8 @@ class ThemeUtils {
       borderRadius: BorderRadius.circular(16),
       boxShadow: [
         BoxShadow(
-          color: isDarkMode 
-              ? Colors.black.withOpacity(0.2) 
+          color: isDarkMode
+              ? Colors.black.withOpacity(0.2)
               : Colors.grey.withOpacity(0.1),
           spreadRadius: 1,
           blurRadius: 4,
@@ -101,7 +115,7 @@ class ThemeUtils {
       ],
     );
   }
-  
+
   /// Get button style for primary buttons
   static ButtonStyle primaryButtonStyle() {
     return ElevatedButton.styleFrom(
@@ -113,7 +127,7 @@ class ThemeUtils {
       ),
     );
   }
-  
+
   /// Get button style for secondary buttons based on dark mode
   static ButtonStyle secondaryButtonStyle(bool isDarkMode) {
     return ElevatedButton.styleFrom(
@@ -125,4 +139,4 @@ class ThemeUtils {
       ),
     );
   }
-} 
+}
