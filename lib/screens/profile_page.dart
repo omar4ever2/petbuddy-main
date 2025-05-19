@@ -384,13 +384,25 @@ class _ProfilePageState extends State<ProfilePage> {
             const SizedBox(height: 40),
 
             // Credits
-            Text(
-              'Built with love by Omar Mohamed - Ziad Hossam - Moustafa Samer - Amina Tarek',
-              style: TextStyle(
-                fontSize: 12,
-                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+            Center(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Built with love by Omar Mohamed - Ziad Hossam - Moustafa Samer - Amina Tarek',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.favorite,
+                    size: 14,
+                    color: Colors.red[400],
+                  ),
+                ],
               ),
-              textAlign: TextAlign.center,
             ),
 
             const SizedBox(height: 16),
