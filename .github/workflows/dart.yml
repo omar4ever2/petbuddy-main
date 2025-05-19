@@ -1,4 +1,4 @@
-name: Dart
+name: Flutter CI
 
 on:
   push:
@@ -13,20 +13,30 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Set up the Flutter SDK instead of the Dart SDK
-      - uses: subosito/flutter-action@v2
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
         with:
-          flutter-version: 'stable'
+          flutter-version: '3.19.0'
+          channel: 'stable'
+          cache: true
 
       - name: Install dependencies
         run: flutter pub get
 
-      # Uncomment this step to verify the use of 'flutter format' on each commit.
-      # - name: Verify formatting
-      #   run: flutter format --set-exit-if-changed .
+      - name: Verify formatting
+        run: flutter format --set-exit-if-changed .
 
       - name: Analyze project source
         run: flutter analyze
 
       - name: Run tests
         run: flutter test
+
+      - name: Build APK
+        run: flutter build apk --debug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-apk
+          path: build/app/outputs/flutter-apk/app-debug.apk
